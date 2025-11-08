@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Manual - Google Colab</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .upload-guide {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .step-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .step-number {
+            background: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .code-block {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .warning-box {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .success-box {
+            background: #51cf66;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .info-box {
+            background: #339af0;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .file-structure {
+            background: rgba(0,0,0,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Voltar
+    </a>
+
+    <div class="upload-guide">
+        <header style="text-align: center; margin-bottom: 40px;">
+            <h1><i class="fab fa-google"></i> Upload Manual - Google Colab</h1>
+            <p>Guia completo para fazer upload e treinar seu modelo de voz no Google Colab</p>
+        </header>
+
+        <!-- Passo 1: Preparar Arquivos -->
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <h2><i class="fas fa-folder-open"></i> Preparar Arquivos Localmente</h2>
+            <p>Organize seus arquivos de treinamento na seguinte estrutura:</p>
+            
+            <div class="file-structure">
+meu_modelo_piper/
+├── wav/
+│   ├── audio001.wav
+│   ├── audio002.wav
+│   ├── audio003.wav
+│   └── ... (todos os arquivos .wav)
+├── metadata.csv
+└── config.json (opcional)
+            </div>
+
+            <div class="info-box">
+                <strong>📋 Formato do metadata.csv:</strong><br>
+                <code>audio001|Texto correspondente ao áudio 001</code><br>
+                <code>audio002|Texto correspondente ao áudio 002</code>
+            </div>
+
+            <div class="warning-box">
+                <strong>⚠️ Importante:</strong> Certifique-se de que os nomes dos arquivos no CSV correspondem exatamente aos arquivos .wav
+            </div>
+        </div>
+
+        <!-- Passo 2: Compactar Arquivos -->
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <h2><i class="fas fa-file-archive"></i> Compactar em ZIP</h2>
+            <p>Crie um arquivo ZIP com todos os seus dados:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+# Windows: Clique com botão direito na pasta → "Enviar para" → "Pasta compactada"
+# Linux/Mac: 
+zip -r meu_modelo_piper.zip meu_modelo_piper/
+            </div>
+
+            <div class="success-box">
+                <strong>✅ Resultado:</strong> Arquivo <code>meu_modelo_piper.zip</code> pronto para upload
+            </div>
+        </div>
+
+        <!-- Passo 3: Abrir Google Colab -->
+        <div class="step-card">
+            <div class="step-number">3</div>
+            <h2><i class="fab fa-google"></i> Abrir Google Colab</h2>
+            <p>Acesse o notebook de treinamento Piper no Google Colab:</p>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="https://colab.research.google.com/github/rhasspy/piper/blob/master/notebooks/piper_train_colab.ipynb" 
+                   target="_blank" 
+                   style="background: #ff6b35; color: white; padding: 15px 30px; border-radius: 25px; text-decoration: none; display: inline-block; font-weight: bold;">
+                    <i class="fas fa-external-link-alt"></i> Abrir Notebook Piper Colab
+                </a>
+            </div>
+
+            <div class="info-box">
+                <strong>🔗 Link Alternativo:</strong><br>
+                <code>https://colab.research.google.com/github/rhasspy/piper/blob/master/notebooks/piper_train_colab.ipynb</code>
+            </div>
+        </div>
+
+        <!-- Passo 4: Configurar Runtime -->
+        <div class="step-card">
+            <div class="step-number">4</div>
+            <h2><i class="fas fa-microchip"></i> Configurar GPU</h2>
+            <p>Configure o Google Colab para usar GPU:</p>
+            
+            <ol style="font-size: 16px; line-height: 1.6;">
+                <li>No menu superior: <strong>Runtime → Change runtime type</strong></li>
+                <li>Hardware accelerator: <strong>GPU</strong></li>
+                <li>GPU type: <strong>T4</strong> (recomendado)</li>
+                <li>Clique <strong>Save</strong></li>
+            </ol>
+
+            <div class="warning-box">
+                <strong>⚠️ Atenção:</strong> Sem GPU, o treinamento pode levar 10x mais tempo!
+            </div>
+        </div>
+
+        <!-- Passo 5: Upload do ZIP -->
+        <div class="step-card">
+            <div class="step-number">5</div>
+            <h2><i class="fas fa-cloud-upload-alt"></i> Upload do Arquivo ZIP</h2>
+            <p>Faça upload do seu arquivo ZIP para o Colab:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+# Execute esta célula no Colab para fazer upload
+from google.colab import files
+import zipfile
+import os
+
+# Upload do arquivo ZIP
+print("📁 Selecione seu arquivo ZIP com os dados de treinamento:")
+uploaded = files.upload()
+
+# Extrair ZIP
+zip_name = list(uploaded.keys())[0]
+print(f"📦 Extraindo {zip_name}...")
+
+with zipfile.ZipFile(zip_name, 'r') as zip_ref:
+    zip_ref.extractall('/content/')
+
+print("✅ Arquivos extraídos com sucesso!")
+            </div>
+        </div>
+
+        <!-- Passo 6: Instalar Dependências -->
+        <div class="step-card">
+            <div class="step-number">6</div>
+            <h2><i class="fas fa-download"></i> Instalar Piper</h2>
+            <p>Instale as dependências necessárias:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+# Instalar dependências do sistema
+!apt-get update
+!apt-get install -y espeak-ng
+
+# Clonar repositório Piper
+!git clone https://github.com/rhasspy/piper.git
+%cd piper
+
+# Instalar dependências Python
+!pip install -e .
+!pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+print("🚀 Piper instalado com sucesso!")
+            </div>
+        </div>
+
+        <!-- Passo 7: Configurar Treinamento -->
+        <div class="step-card">
+            <div class="step-number">7</div>
+            <h2><i class="fas fa-cogs"></i> Configurar Treinamento</h2>
+            <p>Configure os parâmetros de treinamento:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+import json
+
+# Configuração de treinamento
+config = {
+    "audio": {
+        "sample_rate": 22050,
+        "channels": 1
+    },
+    "model": {
+        "hidden_channels": 192,
+        "filter_channels": 768,
+        "n_heads": 2,
+        "n_layers": 6,
+        "kernel_size": 3,
+        "p_dropout": 0.1
+    },
+    "training": {
+        "batch_size": 8,  # Ajuste conforme sua GPU
+        "learning_rate": 0.0002,
+        "epochs": 200,
+        "save_every": 50
+    },
+    "dataset": {
+        "language": "pt-br",
+        "dataset_path": "/content/meu_modelo_piper",
+        "metadata_path": "/content/meu_modelo_piper/metadata.csv"
+    }
+}
+
+# Salvar configuração
+with open('/content/piper_config.json', 'w') as f:
+    json.dump(config, f, indent=2)
+
+print("⚙️ Configuração salva!")
+            </div>
+        </div>
+
+        <!-- Passo 8: Iniciar Treinamento -->
+        <div class="step-card">
+            <div class="step-number">8</div>
+            <h2><i class="fas fa-play"></i> Iniciar Treinamento</h2>
+            <p>Execute o treinamento do modelo:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+# Iniciar treinamento
+!python -m piper_train \
+    --dataset-dir /content/meu_modelo_piper \
+    --output-dir /content/output \
+    --config /content/piper_config.json \
+    --resume-from-checkpoint /content/output/checkpoint_latest.pt
+
+print("🎯 Treinamento iniciado!")
+print("📊 Monitore o progresso nas células abaixo")
+            </div>
+
+            <div class="info-box">
+                <strong>⏱️ Tempo Estimado:</strong><br>
+                • 30 min de áudio: 2-4 horas<br>
+                • 1 hora de áudio: 4-8 horas<br>
+                • 2 horas de áudio: 8-12 horas
+            </div>
+        </div>
+
+        <!-- Passo 9: Monitorar Progresso -->
+        <div class="step-card">
+            <div class="step-number">9</div>
+            <h2><i class="fas fa-chart-line"></i> Monitorar Progresso</h2>
+            <p>Acompanhe o treinamento em tempo real:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+import matplotlib.pyplot as plt
+import time
+import os
+
+def monitor_training():
+    while True:
+        # Verificar logs de treinamento
+        if os.path.exists('/content/output/train.log'):
+            with open('/content/output/train.log', 'r') as f:
+                lines = f.readlines()
+                if lines:
+                    print(f"📊 Última linha: {lines[-1].strip()}")
+        
+        # Verificar GPU
+        !nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total --format=csv,noheader,nounits
+        
+        time.sleep(30)  # Verificar a cada 30 segundos
+
+# Executar monitoramento
+monitor_training()
+            </div>
+        </div>
+
+        <!-- Passo 10: Download do Modelo -->
+        <div class="step-card">
+            <div class="step-number">10</div>
+            <h2><i class="fas fa-download"></i> Download do Modelo</h2>
+            <p>Baixe o modelo treinado:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+import zipfile
+from google.colab import files
+
+# Compactar modelo treinado
+def create_model_zip():
+    zip_path = '/content/modelo_treinado.zip'
+    
+    with zipfile.ZipFile(zip_path, 'w') as zipf:
+        # Adicionar arquivos do modelo
+        for root, dirs, files in os.walk('/content/output'):
+            for file in files:
+                if file.endswith(('.onnx', '.json', '.pt')):
+                    file_path = os.path.join(root, file)
+                    zipf.write(file_path, file)
+    
+    return zip_path
+
+# Criar ZIP e fazer download
+model_zip = create_model_zip()
+files.download(model_zip)
+
+print("📦 Modelo baixado com sucesso!")
+            </div>
+
+            <div class="success-box">
+                <strong>🎉 Parabéns!</strong> Seu modelo de voz personalizado está pronto para uso!
+            </div>
+        </div>
+
+        <!-- Dicas Importantes -->
+        <div class="step-card" style="background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);">
+            <h2><i class="fas fa-lightbulb"></i> Dicas Importantes</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <div>
+                    <h4>🎯 Para Melhor Qualidade:</h4>
+                    <ul>
+                        <li>Use áudio de 22kHz, mono</li>
+                        <li>Mínimo 1 hora de áudio limpo</li>
+                        <li>Ambiente silencioso</li>
+                        <li>Microfone consistente</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4>⚡ Para Treinamento Mais Rápido:</h4>
+                    <ul>
+                        <li>Use GPU T4 ou melhor</li>
+                        <li>Reduza batch_size se der erro de memória</li>
+                        <li>Monitore uso da GPU</li>
+                        <li>Salve checkpoints regularmente</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Links Úteis -->
+        <div class="step-card" style="background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);">
+            <h2><i class="fas fa-link"></i> Links Úteis</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
+                <a href="https://colab.research.google.com/" target="_blank" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; display: block;">
+                    <i class="fab fa-google"></i> Google Colab
+                </a>
+                <a href="https://github.com/rhasspy/piper" target="_blank" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; display: block;">
+                    <i class="fab fa-github"></i> Piper GitHub
+                </a>
+                <a href="https://huggingface.co/rhasspy" target="_blank" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; display: block;">
+                    <i class="fas fa-robot"></i> Modelos Pré-treinados
+                </a>
+                <a href="https://community.rhasspy.org/" target="_blank" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; display: block;">
+                    <i class="fas fa-users"></i> Comunidade
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(button) {
+            const codeBlock = button.parentElement;
+            const code = codeBlock.textContent.replace('Copiar', '').trim();
+            
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copiado!';
+                button.style.background = '#51cf66';
+                
+                setTimeout(() => {
+                    button.textContent = 'Copiar';
+                    button.style.background = 'rgba(255,255,255,0.2)';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

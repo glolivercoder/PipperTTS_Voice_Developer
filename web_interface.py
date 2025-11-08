@@ -667,11 +667,18 @@ def upload_kaggle():
     return render_template('Upload_Kaggle.html')
 
 if __name__ == '__main__':
+    import argparse
+    
+    # Configurar argumentos de linha de comando
+    parser = argparse.ArgumentParser(description='Interface web do Piper TTS')
+    parser.add_argument('--no-debug', action='store_true', help='Desativar modo debug')
+    args = parser.parse_args()
+    
     # Criar diretório para arquivos estáticos
     os.makedirs('static/audio', exist_ok=True)
     
-    print("🚀 Iniciando interface web do Piper TTS...")
-    print("📱 Acesse: http://localhost:5000")
-    print("🎯 Para parar: Ctrl+C")
+    print("Iniciando interface web do Piper TTS...")
+    print("Acesse: http://localhost:5000")
+    print("Para parar: Ctrl+C")
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=not args.no_debug, host='0.0.0.0', port=5000)

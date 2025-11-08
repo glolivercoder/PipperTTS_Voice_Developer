@@ -1,0 +1,1997 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piper TTS - Treinamento de Vozes Clonadas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-microphone-alt"></i>
+                <h1>Piper TTS</h1>
+            </div>
+            <p class="subtitle">Interface para Treinamento de Vozes Clonadas</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="tab-btn active" onclick="showTab('upload')">
+                <i class="fas fa-upload"></i> Upload de Dados
+            </button>
+            <button class="tab-btn" onclick="showTab('training')">
+                <i class="fas fa-cogs"></i> Treinamento
+            </button>
+            <button class="tab-btn" onclick="showTab('export')">
+                <i class="fas fa-cloud-upload-alt"></i> Export Train
+            </button>
+            <button class="tab-btn" onclick="showTab('models')">
+                <i class="fas fa-brain"></i> Modelos
+            </button>
+            <button class="tab-btn" onclick="showTab('test')">
+                <i class="fas fa-play"></i> Teste de Voz
+            </button>
+            <button class="tab-btn" onclick="showTab('manual')">
+                <i class="fas fa-book"></i> Manual
+            </button>
+        </nav>
+
+        <!-- Tab: Upload de Dados -->
+        <div id="upload" class="tab-content active">
+            <div class="card">
+                <h2><i class="fas fa-cloud-upload-alt"></i> Upload de Dados para Treinamento</h2>
+                
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="model_name">Nome do Modelo:</label>
+                        <input type="text" id="model_name" name="model_name" required 
+                               placeholder="Ex: minha_voz_personalizada">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="audio_files">Arquivos de Áudio (.wav, .mp3, .flac):</label>
+                        <input type="file" id="audio_files" name="audio_files" multiple 
+                               accept=".wav,.mp3,.flac" required>
+                        <small>Selecione múltiplos arquivos de áudio com as gravações da voz</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="metadata_file">Arquivo Metadata (metadata.csv):</label>
+                        <input type="file" id="metadata_file" name="metadata_file" 
+                               accept=".csv" required>
+                        <small>Arquivo CSV com formato: id|texto ou id|speaker|texto</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Exemplo de formato metadata.csv:</label>
+                        <pre class="code-example">audio001|Olá, este é um exemplo de texto para treinamento.
+audio002|A qualidade do áudio é muito importante para bons resultados.
+audio003|Recomenda-se pelo menos 30 minutos de áudio limpo.</pre>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Enviar Arquivos
+                    </button>
+                </form>
+
+                <div id="uploadStatus" class="status-message" style="display: none;"></div>
+            </div>
+
+            <!-- CSV Automation Card -->
+            <div class="card">
+                <h2><i class="fas fa-magic"></i> Automação do CSV</h2>
+                <p>Gere automaticamente o arquivo metadata.csv usando transcrição automática ou outros métodos.</p>
+                
+                <div class="automation-tabs">
+                    <button class="automation-tab active" onclick="showAutomationTab('transcription')">
+                        <i class="fas fa-microphone"></i> Transcrição Automática
+                    </button>
+                    <button class="automation-tab" onclick="showAutomationTab('text-file')">
+                        <i class="fas fa-file-text"></i> Arquivo de Texto
+                    </button>
+                    <button class="automation-tab" onclick="showAutomationTab('manual-editor')">
+                        <i class="fas fa-edit"></i> Editor Manual
+                    </button>
+                </div>
+
+                <!-- Transcrição Automática -->
+                <div id="transcription" class="automation-content active">
+                    <div class="transcription-info">
+                        <h4>🎤 Transcrição Automática de Áudio</h4>
+                        <p>Use IA para transcrever automaticamente seus arquivos de áudio e gerar o CSV.</p>
+                    </div>
+
+                    <form id="transcriptionForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="transcription_model">Modelo para Transcrever:</label>
+                                <select id="transcription_model" name="model_name" required>
+                                    <option value="">Selecione um modelo...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="transcription_engine">Engine de Transcrição:</label>
+                                <select id="transcription_engine" name="engine">
+                                    <option value="whisper">Whisper (OpenAI) - Recomendado</option>
+                                    <option value="google">Google Speech Recognition</option>
+                                    <option value="wav2vec2">Wav2Vec2 (Facebook)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="transcription_language">Idioma do Áudio:</label>
+                                <select id="transcription_language" name="language">
+                                    <option value="pt">Português</option>
+                                    <option value="en">Inglês</option>
+                                    <option value="es">Espanhol</option>
+                                    <option value="fr">Francês</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="review_transcription" checked>
+                                    Revisar transcrições antes de salvar
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-robot"></i> Iniciar Transcrição Automática
+                        </button>
+                    </form>
+
+                    <div id="transcriptionProgress" class="progress-section" style="display: none;">
+                        <h4>📊 Progresso da Transcrição</h4>
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="transcriptionProgressFill"></div>
+                            <span class="progress-text" id="transcriptionProgressText">0%</span>
+                        </div>
+
+                        <div class="transcription-details">
+                            <p><strong>Arquivo Atual:</strong> <span id="currentTranscriptionFile">-</span></p>
+                            <p><strong>Concluídos:</strong> <span id="completedTranscriptions">0</span> / <span id="totalTranscriptions">0</span></p>
+                        </div>
+
+                        <div class="transcription-results" id="transcriptionResults">
+                            <h5>📝 Resultados:</h5>
+                            <div class="results-list" id="transcriptionResultsList"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Arquivo de Texto -->
+                <div id="text-file" class="automation-content">
+                    <div class="text-file-info">
+                        <h4>📄 Gerar CSV de Arquivo de Texto</h4>
+                        <p>Faça upload de um arquivo .txt com uma linha de texto para cada arquivo de áudio.</p>
+                    </div>
+
+                    <form id="textFileForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="text_file_model">Modelo de Destino:</label>
+                            <select id="text_file_model" name="model_name" required>
+                                <option value="">Selecione um modelo...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="text_file_input">Arquivo de Texto (.txt):</label>
+                            <input type="file" id="text_file_input" name="text_file" accept=".txt" required>
+                            <small>Cada linha deve corresponder a um arquivo de áudio na ordem alfabética</small>
+                        </div>
+
+                        <div class="text-file-example">
+                            <h5>📋 Exemplo do arquivo .txt:</h5>
+                            <pre class="example-text">Olá, este é o primeiro áudio.
+Esta é a segunda gravação de voz.
+Aqui temos o terceiro exemplo de texto.
+E assim por diante para cada arquivo...</pre>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-file-import"></i> Gerar CSV do Arquivo
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Editor Manual -->
+                <div id="manual-editor" class="automation-content">
+                    <div class="editor-info">
+                        <h4>✏️ Editor Manual de CSV</h4>
+                        <p>Crie ou edite o arquivo metadata.csv diretamente na interface.</p>
+                    </div>
+
+                    <form id="manualEditorForm">
+                        <div class="form-group">
+                            <label for="editor_model">Modelo de Destino:</label>
+                            <select id="editor_model" name="model_name" required>
+                                <option value="">Selecione um modelo...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="csv_editor">Conteúdo do CSV:</label>
+                            <textarea id="csv_editor" name="csv_content" rows="15" 
+                                    placeholder="audio001|Texto correspondente ao primeiro áudio
+audio002|Texto correspondente ao segundo áudio
+audio003|Texto correspondente ao terceiro áudio"></textarea>
+                            <small>Formato: id|texto (ou id|falante|texto para múltiplos falantes)</small>
+                        </div>
+
+                        <div class="editor-tools">
+                            <button type="button" class="btn btn-secondary" onclick="loadExistingCSV()">
+                                <i class="fas fa-folder-open"></i> Carregar CSV Existente
+                            </button>
+                            
+                            <button type="button" class="btn btn-secondary" onclick="validateCSV()">
+                                <i class="fas fa-check-circle"></i> Validar Formato
+                            </button>
+                            
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Salvar CSV
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="csvValidation" class="validation-results" style="display: none;">
+                        <h5>🔍 Resultado da Validação:</h5>
+                        <div id="validationMessages"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Treinamento -->
+        <div id="training" class="tab-content">
+            <div class="card">
+                <h2><i class="fas fa-cogs"></i> Configuração de Treinamento</h2>
+                
+                <form id="trainingForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="train_model_name">Modelo para Treinar:</label>
+                            <select id="train_model_name" name="model_name" required>
+                                <option value="">Selecione um modelo...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="language">Idioma:</label>
+                            <select id="language" name="language">
+                                <option value="pt-br">Português (Brasil)</option>
+                                <option value="pt">Português</option>
+                                <option value="en-us">Inglês (EUA)</option>
+                                <option value="en">Inglês</option>
+                                <option value="es">Espanhol</option>
+                                <option value="fr">Francês</option>
+                                <option value="de">Alemão</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="quality">Qualidade do Modelo:</label>
+                            <select id="quality" name="quality">
+                                <option value="low">Baixa (16kHz, mais rápido)</option>
+                                <option value="medium" selected>Média (22kHz, balanceado)</option>
+                                <option value="high">Alta (22kHz, melhor qualidade)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sample_rate">Taxa de Amostragem:</label>
+                            <select id="sample_rate" name="sample_rate">
+                                <option value="16000">16 kHz</option>
+                                <option value="22050" selected>22.05 kHz</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="single_speaker" name="single_speaker" checked>
+                            Modelo de um único falante
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-success" id="startTrainingBtn">
+                        <i class="fas fa-play"></i> Iniciar Treinamento
+                    </button>
+                </form>
+            </div>
+
+            <div class="card" id="trainingProgress" style="display: none;">
+                <h3><i class="fas fa-spinner fa-spin"></i> Progresso do Treinamento</h3>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                    <span class="progress-text" id="progressText">0%</span>
+                </div>
+
+                <div class="status-info">
+                    <p><strong>Modelo:</strong> <span id="currentModel">-</span></p>
+                    <p><strong>Etapa Atual:</strong> <span id="currentStep">-</span></p>
+                </div>
+
+                <div class="log-container">
+                    <h4>Log do Treinamento:</h4>
+                    <div id="trainingLog" class="log-output"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Export Train -->
+        <div id="export" class="tab-content">
+            <div class="card">
+                <h2><i class="fas fa-cloud-upload-alt"></i> Exportar para Treinamento em Nuvem</h2>
+                
+                <div class="platform-selector">
+                    <h3>Escolha a Plataforma:</h3>
+                    <div class="platform-grid">
+                        <div class="platform-card" data-platform="colab">
+                            <div class="platform-icon">
+                                <i class="fab fa-google"></i>
+                            </div>
+                            <h4>Google Colab</h4>
+                            <p>GPU gratuita, fácil de usar</p>
+                            <div class="platform-features">
+                                <span class="feature-badge">✅ GPU Gratuita</span>
+                                <span class="feature-badge">✅ Fácil Setup</span>
+                                <span class="feature-badge">✅ Jupyter Notebook</span>
+                            </div>
+                        </div>
+                        
+                        <div class="platform-card" data-platform="kaggle">
+                            <div class="platform-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h4>Kaggle Notebooks</h4>
+                            <p>GPU potente, comunidade ativa</p>
+                            <div class="platform-features">
+                                <span class="feature-badge">✅ GPU P100</span>
+                                <span class="feature-badge">✅ 30h/semana</span>
+                                <span class="feature-badge">✅ Datasets</span>
+                            </div>
+                        </div>
+                        
+                        <div class="platform-card" data-platform="codesphere">
+                            <div class="platform-icon">
+                                <i class="fas fa-code"></i>
+                            </div>
+                            <h4>CodeSphere</h4>
+                            <p>IDE completo, recursos dedicados</p>
+                            <div class="platform-features">
+                                <span class="feature-badge">✅ IDE Completo</span>
+                                <span class="feature-badge">✅ Recursos Dedicados</span>
+                                <span class="feature-badge">✅ Colaboração</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Manual Section -->
+                <div class="manual-upload-section">
+                    <h3><i class="fas fa-book-open"></i> Upload Manual - Guias Detalhados</h3>
+                    <p>Prefere fazer upload manual? Acesse nossos guias passo a passo para cada plataforma:</p>
+                    
+                    <div class="manual-upload-grid">
+                        <div class="manual-upload-card">
+                            <div class="upload-icon">
+                                <i class="fab fa-google"></i>
+                            </div>
+                            <h4>Google Colab</h4>
+                            <p>Guia completo para upload manual no Google Colab com GPU gratuita</p>
+                            <div class="upload-features">
+                                <span class="upload-badge">📋 10 Passos Detalhados</span>
+                                <span class="upload-badge">💻 Código Pronto</span>
+                                <span class="upload-badge">🎯 GPU T4 Gratuita</span>
+                            </div>
+                            <a href="/upload-googlecolab" target="_blank" class="btn btn-outline">
+                                <i class="fas fa-external-link-alt"></i> Abrir Guia Colab
+                            </a>
+                        </div>
+                        
+                        <div class="manual-upload-card">
+                            <div class="upload-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h4>Kaggle Notebooks</h4>
+                            <p>Tutorial completo para Kaggle com GPU P100 e 30h semanais</p>
+                            <div class="upload-features">
+                                <span class="upload-badge">🚀 12 Passos Avançados</span>
+                                <span class="upload-badge">💾 GPU P100 16GB</span>
+                                <span class="upload-badge">⏰ 30h/semana</span>
+                            </div>
+                            <a href="/upload-kaggle" target="_blank" class="btn btn-outline">
+                                <i class="fas fa-external-link-alt"></i> Abrir Guia Kaggle
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="upload-comparison">
+                        <h4><i class="fas fa-balance-scale"></i> Comparação Rápida</h4>
+                        <div class="comparison-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Recurso</th>
+                                        <th><i class="fab fa-google"></i> Google Colab</th>
+                                        <th><i class="fas fa-chart-line"></i> Kaggle</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>GPU</strong></td>
+                                        <td>T4, K80, P100 (gratuita)</td>
+                                        <td>P100 16GB (gratuita)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tempo Limite</strong></td>
+                                        <td>12h contínuas</td>
+                                        <td>30h/semana</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Facilidade</strong></td>
+                                        <td>⭐⭐⭐⭐⭐ Muito Fácil</td>
+                                        <td>⭐⭐⭐⭐ Fácil</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Performance</strong></td>
+                                        <td>⭐⭐⭐ Boa</td>
+                                        <td>⭐⭐⭐⭐⭐ Excelente</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Requisitos</strong></td>
+                                        <td>Conta Google</td>
+                                        <td>Conta + Verificação Telefone</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="exportForm">
+                    <div class="form-group">
+                        <label for="export_dataset">Dataset para Exportar:</label>
+                        <select id="export_dataset" name="dataset_name" required>
+                            <option value="">Selecione um dataset...</option>
+                        </select>
+                    </div>
+
+                    <div class="dataset-info" id="datasetInfo" style="display: none;">
+                        <h4>Informações do Dataset:</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Arquivos de Áudio:</span>
+                                <span class="info-value" id="audioCount">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Tamanho Total:</span>
+                                <span class="info-value" id="datasetSize">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Metadata:</span>
+                                <span class="info-value" id="hasMetadata">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="export-options">
+                        <h4>Opções de Exportação:</h4>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="export_quality">Qualidade do Treinamento:</label>
+                                <select id="export_quality" name="quality">
+                                    <option value="medium">Média (Recomendado)</option>
+                                    <option value="high" selected>Alta (GPU Necessária)</option>
+                                    <option value="ultra">Ultra (GPU Potente)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="export_epochs">Número de Épocas:</label>
+                                <select id="export_epochs" name="epochs">
+                                    <option value="100">100 (Rápido)</option>
+                                    <option value="200" selected>200 (Recomendado)</option>
+                                    <option value="500">500 (Qualidade Máxima)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="auto_download" name="auto_download" checked>
+                                Download automático dos modelos após treinamento
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="exportBtn">
+                        <i class="fas fa-rocket"></i> Exportar para Nuvem
+                    </button>
+                </form>
+            </div>
+
+            <!-- Progress Card -->
+            <div class="card" id="exportProgress" style="display: none;">
+                <h3><i class="fas fa-cloud-upload-alt"></i> Progresso da Exportação</h3>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="exportProgressFill"></div>
+                    <span class="progress-text" id="exportProgressText">0%</span>
+                </div>
+
+                <div class="status-info">
+                    <p><strong>Plataforma:</strong> <span id="exportPlatform">-</span></p>
+                    <p><strong>Etapa Atual:</strong> <span id="exportStep">-</span></p>
+                </div>
+
+                <div class="export-results" id="exportResults" style="display: none;">
+                    <h4>🎉 Exportação Concluída!</h4>
+                    
+                    <div class="result-actions">
+                        <a id="downloadPackageBtn" class="btn btn-success" href="#" download>
+                            <i class="fas fa-download"></i> Baixar Pacote de Treinamento
+                        </a>
+                        
+                        <a id="openNotebookBtn" class="btn btn-primary" href="#" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> Abrir Notebook na Nuvem
+                        </a>
+                    </div>
+
+                    <div class="instructions">
+                        <h5>📋 Próximos Passos:</h5>
+                        <ol>
+                            <li>Baixe o pacote de treinamento</li>
+                            <li>Abra o notebook na plataforma escolhida</li>
+                            <li>Faça upload do pacote no notebook</li>
+                            <li>Execute todas as células em ordem</li>
+                            <li>Aguarde o treinamento completar</li>
+                            <li>Baixe os modelos gerados (.onnx e .json)</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cloud Training Monitor -->
+            <div class="card">
+                <h3><i class="fas fa-monitor-heart-rate"></i> Monitor de Treinamento Remoto</h3>
+                
+                <div class="monitor-connection">
+                    <form id="monitorForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="session_id">ID da Sessão:</label>
+                                <input type="text" id="session_id" name="session_id" 
+                                       placeholder="Ex: colab_session_123">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="notebook_url">URL do Notebook:</label>
+                                <input type="url" id="notebook_url" name="notebook_url" 
+                                       placeholder="https://colab.research.google.com/...">
+                            </div>
+                        </div>
+                        
+                        <div class="monitor-actions">
+                            <button type="submit" class="btn btn-primary" id="startMonitorBtn">
+                                <i class="fas fa-play"></i> Iniciar Monitoramento
+                            </button>
+                            
+                            <button type="button" class="btn btn-secondary" id="stopMonitorBtn" disabled>
+                                <i class="fas fa-stop"></i> Parar Monitoramento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="monitor-dashboard" id="monitorDashboard" style="display: none;">
+                    <div class="dashboard-header">
+                        <h4>📊 Dashboard de Monitoramento</h4>
+                        <div class="connection-status">
+                            <span class="status-indicator" id="connectionStatus">🔴 Desconectado</span>
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Loss Atual</span>
+                                <span class="metric-value" id="currentLoss">-</span>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Uso da GPU</span>
+                                <span class="metric-value" id="gpuUsage">-</span>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <i class="fas fa-memory"></i>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Uso da RAM</span>
+                                <span class="metric-value" id="memoryUsage">-</span>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Tempo Restante</span>
+                                <span class="metric-value" id="timeRemaining">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="training-progress">
+                        <h5>Progresso do Treinamento:</h5>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="remoteProgressFill"></div>
+                            <span class="progress-text" id="remoteProgressText">0%</span>
+                        </div>
+                        <p class="progress-message" id="remoteProgressMessage">Aguardando conexão...</p>
+                    </div>
+
+                    <div class="auto-download-section">
+                        <h5>Download Automático:</h5>
+                        <div class="download-status" id="downloadStatus">
+                            <p>🔄 Aguardando conclusão do treinamento...</p>
+                        </div>
+                        
+                        <button class="btn btn-success" id="manualDownloadBtn" style="display: none;">
+                            <i class="fas fa-download"></i> Baixar Modelo Treinado
+                        </button>
+                    </div>
+                </div>
+
+                <div class="monitor-placeholder" id="monitorPlaceholder">
+                    <p>🔄 Conecte-se ao notebook na nuvem para monitorar o progresso em tempo real</p>
+                    
+                    <div class="monitor-features">
+                        <div class="feature-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Métricas de Loss em Tempo Real</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Tempo Estimado de Conclusão</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-memory"></i>
+                            <span>Uso de GPU e Memória</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-download"></i>
+                            <span>Download Automático dos Modelos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Modelos -->
+        <div id="models" class="tab-content">
+            <div class="card">
+                <h2><i class="fas fa-brain"></i> Modelos Treinados</h2>
+                
+                <button onclick="loadModels()" class="btn btn-secondary">
+                    <i class="fas fa-sync"></i> Atualizar Lista
+                </button>
+
+                <div id="modelsList" class="models-grid">
+                    <!-- Modelos serão carregados aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Teste de Voz -->
+        <div id="test" class="tab-content">
+            <div class="card">
+                <h2><i class="fas fa-play"></i> Teste de Voz</h2>
+                
+                <form id="testForm">
+                    <div class="form-group">
+                        <label for="test_model">Modelo para Testar:</label>
+                        <select id="test_model" name="model_name" required>
+                            <option value="">Selecione um modelo...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="test_text">Texto para Síntese:</label>
+                        <textarea id="test_text" name="text" rows="4" 
+                                placeholder="Digite o texto que deseja converter em áudio...">Olá! Este é um teste da minha voz clonada usando o Piper TTS. A qualidade do resultado depende da quantidade e qualidade dos dados de treinamento.</textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-microphone"></i> Gerar Áudio
+                    </button>
+                </form>
+
+                <div id="audioResult" class="audio-result" style="display: none;">
+                    <h3>Resultado:</h3>
+                    <audio controls id="generatedAudio">
+                        Seu navegador não suporta o elemento de áudio.
+                    </audio>
+                    <br>
+                    <a id="downloadLink" class="btn btn-secondary" download>
+                        <i class="fas fa-download"></i> Baixar Áudio
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Manual -->
+        <div id="manual" class="tab-content">
+            <div class="manual-container">
+                <!-- Índice -->
+                <div class="manual-sidebar">
+                    <h3><i class="fas fa-list"></i> Índice</h3>
+                    <nav class="manual-nav">
+                        <a href="#intro" onclick="scrollToSection('intro')">1. Introdução</a>
+                        <a href="#requirements" onclick="scrollToSection('requirements')">2. Requisitos</a>
+                        <a href="#audio-prep" onclick="scrollToSection('audio-prep')">3. Preparação do Áudio</a>
+                        <a href="#csv-creation" onclick="scrollToSection('csv-creation')">4. Criação do CSV</a>
+                        <a href="#upload-process" onclick="scrollToSection('upload-process')">5. Upload de Dados</a>
+                        <a href="#csv-automation" onclick="scrollToSection('csv-automation')">5.5. Automação do CSV 🆕</a>
+                        <a href="#local-training" onclick="scrollToSection('local-training')">6. Treinamento Local</a>
+                        <a href="#cloud-export" onclick="scrollToSection('cloud-export')">7. Export Train</a>
+                        <a href="#monitoring" onclick="scrollToSection('monitoring')">8. Monitoramento</a>
+                        <a href="#testing" onclick="scrollToSection('testing')">9. Teste de Modelos</a>
+                        <a href="#troubleshooting" onclick="scrollToSection('troubleshooting')">10. Solução de Problemas</a>
+                    </nav>
+                </div>
+
+                <!-- Conteúdo Principal -->
+                <div class="manual-content">
+                    <!-- 1. Introdução -->
+                    <section id="intro" class="manual-section">
+                        <h2><i class="fas fa-rocket"></i> 1. Introdução</h2>
+                        <div class="section-content">
+                            <p>Bem-vindo ao <strong>Piper TTS Voice Cloning System</strong>! Esta aplicação permite criar modelos de voz personalizados usando inteligência artificial.</p>
+                            
+                            <div class="feature-overview">
+                                <h4>🎯 O que você pode fazer:</h4>
+                                <ul>
+                                    <li>✅ Treinar modelos de voz com sua própria voz</li>
+                                    <li>✅ Usar treinamento local (CPU) ou em nuvem (GPU)</li>
+                                    <li>🆕 <strong>Automação completa do CSV com IA (95%+ precisão)</strong></li>
+                                    <li>🆕 <strong>3 métodos de criação automática de transcrições</strong></li>
+                                    <li>✅ Monitorar progresso em tempo real</li>
+                                    <li>✅ Testar modelos instantaneamente</li>
+                                    <li>✅ Exportar modelos para produção</li>
+                                    <li>🆕 <strong>Interface moderna com automação total</strong></li>
+                                </ul>
+                            </div>
+
+                            <div class="workflow-diagram">
+                                <h4>📋 Fluxo de Trabalho:</h4>
+                                <div class="workflow-steps">
+                                    <div class="workflow-step">
+                                        <div class="step-number">1</div>
+                                        <div class="step-content">
+                                            <h5>Preparar Áudio</h5>
+                                            <p>Grave ou colete arquivos de áudio limpos</p>
+                                        </div>
+                                    </div>
+                                    <div class="workflow-arrow">→</div>
+                                    <div class="workflow-step highlight">
+                                        <div class="step-number">2</div>
+                                        <div class="step-content">
+                                            <h5>🤖 Automação CSV</h5>
+                                            <p>IA transcreve automaticamente</p>
+                                        </div>
+                                    </div>
+                                    <div class="workflow-arrow">→</div>
+                                    <div class="workflow-step">
+                                        <div class="step-number">3</div>
+                                        <div class="step-content">
+                                            <h5>Upload</h5>
+                                            <p>Envie arquivos para a plataforma</p>
+                                        </div>
+                                    </div>
+                                    <div class="workflow-arrow">→</div>
+                                    <div class="workflow-step">
+                                        <div class="step-number">4</div>
+                                        <div class="step-content">
+                                            <h5>Treinar</h5>
+                                            <p>Execute o treinamento do modelo</p>
+                                        </div>
+                                    </div>
+                                    <div class="workflow-arrow">→</div>
+                                    <div class="workflow-step">
+                                        <div class="step-number">5</div>
+                                        <div class="step-content">
+                                            <h5>Testar</h5>
+                                            <p>Valide a qualidade da voz</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 2. Requisitos -->
+                    <section id="requirements" class="manual-section">
+                        <h2><i class="fas fa-clipboard-check"></i> 2. Requisitos</h2>
+                        <div class="section-content">
+                            <div class="requirements-grid">
+                                <div class="req-card">
+                                    <h4><i class="fas fa-microphone"></i> Áudio</h4>
+                                    <ul>
+                                        <li><strong>Duração:</strong> Mínimo 30 minutos</li>
+                                        <li><strong>Recomendado:</strong> 1-2 horas</li>
+                                        <li><strong>Formato:</strong> WAV, MP3, FLAC</li>
+                                        <li><strong>Qualidade:</strong> 22kHz, mono</li>
+                                        <li><strong>Ambiente:</strong> Silencioso</li>
+                                    </ul>
+                                </div>
+
+                                <div class="req-card">
+                                    <h4><i class="fas fa-desktop"></i> Sistema</h4>
+                                    <ul>
+                                        <li><strong>RAM:</strong> 8GB+ (16GB recomendado)</li>
+                                        <li><strong>Disco:</strong> 10GB+ livres</li>
+                                        <li><strong>CPU:</strong> 4+ cores</li>
+                                        <li><strong>GPU:</strong> Opcional (acelera treinamento)</li>
+                                        <li><strong>Internet:</strong> Para Export Train</li>
+                                    </ul>
+                                </div>
+
+                                <div class="req-card">
+                                    <h4><i class="fas fa-file-alt"></i> Dados</h4>
+                                    <ul>
+                                        <li><strong>Arquivos:</strong> 50-500 áudios</li>
+                                        <li><strong>Transcrições:</strong> Texto preciso</li>
+                                        <li><strong>Consistência:</strong> Mesmo falante</li>
+                                        <li><strong>Variedade:</strong> Textos diversos</li>
+                                        <li><strong>Limpeza:</strong> Sem ruídos</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 3. Preparação do Áudio -->
+                    <section id="audio-prep" class="manual-section">
+                        <h2><i class="fas fa-volume-up"></i> 3. Preparação do Áudio</h2>
+                        <div class="section-content">
+                            <div class="audio-guidelines">
+                                <h4>📋 Diretrizes de Gravação:</h4>
+                                
+                                <div class="guideline-item">
+                                    <h5><i class="fas fa-microphone"></i> Equipamento</h5>
+                                    <ul>
+                                        <li>Use um microfone de qualidade (condensador recomendado)</li>
+                                        <li>Mantenha distância consistente (15-20cm)</li>
+                                        <li>Use pop filter para evitar plosivas</li>
+                                        <li>Grave em ambiente tratado acusticamente</li>
+                                    </ul>
+                                </div>
+
+                                <div class="guideline-item">
+                                    <h5><i class="fas fa-cog"></i> Configurações Técnicas</h5>
+                                    <div class="tech-specs">
+                                        <div class="spec-item">
+                                            <span class="spec-label">Taxa de Amostragem:</span>
+                                            <span class="spec-value">22.05 kHz ou 44.1 kHz</span>
+                                        </div>
+                                        <div class="spec-item">
+                                            <span class="spec-label">Bit Depth:</span>
+                                            <span class="spec-value">16-bit ou 24-bit</span>
+                                        </div>
+                                        <div class="spec-item">
+                                            <span class="spec-label">Canais:</span>
+                                            <span class="spec-value">Mono (1 canal)</span>
+                                        </div>
+                                        <div class="spec-item">
+                                            <span class="spec-label">Formato:</span>
+                                            <span class="spec-value">WAV (recomendado)</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="guideline-item">
+                                    <h5><i class="fas fa-voice"></i> Técnica de Gravação</h5>
+                                    <ul>
+                                        <li>Fale com tom natural e consistente</li>
+                                        <li>Mantenha velocidade de fala normal</li>
+                                        <li>Evite respiração audível entre frases</li>
+                                        <li>Pause 1-2 segundos entre gravações</li>
+                                        <li>Pronuncie claramente todas as palavras</li>
+                                    </ul>
+                                </div>
+
+                                <div class="audio-examples">
+                                    <h5><i class="fas fa-list"></i> Tipos de Texto Recomendados</h5>
+                                    <div class="text-types">
+                                        <div class="text-type">
+                                            <h6>📰 Notícias</h6>
+                                            <p>Textos informativos e objetivos</p>
+                                        </div>
+                                        <div class="text-type">
+                                            <h6>📚 Literatura</h6>
+                                            <p>Trechos de livros e contos</p>
+                                        </div>
+                                        <div class="text-type">
+                                            <h6>💬 Conversação</h6>
+                                            <p>Diálogos e frases cotidianas</p>
+                                        </div>
+                                        <div class="text-type">
+                                            <h6>🎭 Expressivo</h6>
+                                            <p>Textos com emoções variadas</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 4. Criação do CSV -->
+                    <section id="csv-creation" class="manual-section">
+                        <h2><i class="fas fa-table"></i> 4. Criação do Arquivo CSV</h2>
+                        <div class="section-content">
+                            <div class="automation-highlight">
+                                <h4>🤖 NOVO! Automação Completa do CSV</h4>
+                                <p>Agora você pode gerar o arquivo metadata.csv automaticamente usando 3 métodos diferentes:</p>
+                                
+                                <div class="automation-methods">
+                                    <div class="method-card">
+                                        <div class="method-icon">🎤</div>
+                                        <h5>Transcrição Automática</h5>
+                                        <p>IA transcreve seus áudios automaticamente</p>
+                                        <div class="method-features">
+                                            <span class="feature">✅ Whisper (OpenAI)</span>
+                                            <span class="feature">✅ Google Speech</span>
+                                            <span class="feature">✅ Wav2Vec2</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="method-card">
+                                        <div class="method-icon">📄</div>
+                                        <h5>Arquivo de Texto</h5>
+                                        <p>Upload de .txt com transcrições prontas</p>
+                                        <div class="method-features">
+                                            <span class="feature">⚡ Instantâneo</span>
+                                            <span class="feature">✅ Controle total</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="method-card">
+                                        <div class="method-icon">✏️</div>
+                                        <h5>Editor Manual</h5>
+                                        <p>Edite CSV diretamente na interface</p>
+                                        <div class="method-features">
+                                            <span class="feature">🔍 Validação</span>
+                                            <span class="feature">💾 Salvamento</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="automation-benefits">
+                                    <h5>📊 Benefícios da Automação:</h5>
+                                    <ul>
+                                        <li><strong>Economia de 80-90% do tempo:</strong> Minutos em vez de horas</li>
+                                        <li><strong>Precisão de 95%+:</strong> IA de última geração</li>
+                                        <li><strong>Escalabilidade:</strong> Processe centenas de áudios</li>
+                                        <li><strong>Formato garantido:</strong> CSV sempre correto</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="quick-start">
+                                    <h5>🚀 Início Rápido:</h5>
+                                    <ol>
+                                        <li>Faça upload dos áudios na aba "Upload de Dados"</li>
+                                        <li>Clique em <strong>"Automação do CSV"</strong></li>
+                                        <li>Escolha <strong>"Transcrição Automática"</strong></li>
+                                        <li>Selecione engine <strong>"Whisper"</strong> e idioma</li>
+                                        <li>Clique <strong>"Iniciar Transcrição Automática"</strong></li>
+                                        <li>Aguarde conclusão e prossiga para treinamento!</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            
+                            <div class="csv-guide">
+                                <h4>📝 Formato do Arquivo metadata.csv (Referência Manual)</h4>
+                                
+                                <div class="csv-format">
+                                    <h5>Para um único falante:</h5>
+                                    <div class="code-block">
+                                        <code>id|texto</code>
+                                    </div>
+                                    
+                                    <h5>Para múltiplos falantes:</h5>
+                                    <div class="code-block">
+                                        <code>id|falante|texto</code>
+                                    </div>
+                                </div>
+
+                                <div class="csv-example">
+                                    <h5>📋 Exemplo Prático:</h5>
+                                    <div class="example-content">
+                                        <h6>Estrutura de Arquivos:</h6>
+                                        <div class="file-structure">
+                                            <pre>meu_modelo/
+├── wav/
+│   ├── audio001.wav
+│   ├── audio002.wav
+│   ├── audio003.wav
+│   └── ...
+└── metadata.csv</pre>
+                                        </div>
+
+                                        <h6>Conteúdo do metadata.csv:</h6>
+                                        <div class="csv-content">
+                                            <textarea readonly rows="8" class="csv-example-text">audio001|Olá, este é um exemplo de texto para treinamento de voz clonada.
+audio002|A qualidade do áudio é muito importante para obter bons resultados.
+audio003|Recomenda-se pelo menos trinta minutos de áudio limpo e claro.
+audio004|O Piper TTS é uma ferramenta poderosa para síntese de voz neural.
+audio005|Com dados suficientes, é possível criar vozes muito naturais.
+audio006|A consistência na gravação é fundamental para o sucesso do modelo.
+audio007|Use um microfone de boa qualidade em ambiente silencioso.
+audio008|Evite respiração audível e ruídos de fundo durante a gravação.</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="csv-rules">
+                                    <h5>⚠️ Regras Importantes:</h5>
+                                    <div class="rules-grid">
+                                        <div class="rule-item">
+                                            <h6><i class="fas fa-exclamation-triangle"></i> Separador</h6>
+                                            <p>Use apenas o caractere <code>|</code> (pipe) como separador</p>
+                                        </div>
+                                        <div class="rule-item">
+                                            <h6><i class="fas fa-file-audio"></i> Correspondência</h6>
+                                            <p>Cada ID deve corresponder a um arquivo de áudio</p>
+                                        </div>
+                                        <div class="rule-item">
+                                            <h6><i class="fas fa-spell-check"></i> Transcrição</h6>
+                                            <p>O texto deve ser exatamente o que foi falado</p>
+                                        </div>
+                                        <div class="rule-item">
+                                            <h6><i class="fas fa-font"></i> Codificação</h6>
+                                            <p>Salve o arquivo em UTF-8 para acentos</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="csv-tools">
+                                    <h5>🛠️ Ferramentas Recomendadas:</h5>
+                                    <div class="tools-list">
+                                        <div class="tool-item">
+                                            <h6>📊 Excel/LibreOffice Calc</h6>
+                                            <p>Para edição visual, mas cuidado com a codificação</p>
+                                        </div>
+                                        <div class="tool-item">
+                                            <h6>📝 Notepad++/VS Code</h6>
+                                            <p>Editores de texto com controle de codificação</p>
+                                        </div>
+                                        <div class="tool-item">
+                                            <h6>🎵 Audacity + Transcrição</h6>
+                                            <p>Para ouvir áudio enquanto transcreve</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 5. Upload de Dados -->
+                    <section id="upload-process" class="manual-section">
+                        <h2><i class="fas fa-cloud-upload-alt"></i> 5. Processo de Upload</h2>
+                        <div class="section-content">
+                            <div class="upload-revolution">
+                                <h4>🎉 Revolução no Upload: Agora com Automação Total!</h4>
+                                <p>O processo de upload foi completamente revolucionado com a nova <strong>Automação do CSV</strong>:</p>
+                                
+                                <div class="comparison-table">
+                                    <div class="comparison-row header">
+                                        <div class="comparison-cell">Processo</div>
+                                        <div class="comparison-cell">Antes (Manual)</div>
+                                        <div class="comparison-cell">Agora (Automático)</div>
+                                    </div>
+                                    <div class="comparison-row">
+                                        <div class="comparison-cell"><strong>Upload Áudios</strong></div>
+                                        <div class="comparison-cell">✅ Mesmo processo</div>
+                                        <div class="comparison-cell">✅ Mesmo processo</div>
+                                    </div>
+                                    <div class="comparison-row">
+                                        <div class="comparison-cell"><strong>Criar CSV</strong></div>
+                                        <div class="comparison-cell">❌ 2-5 min por áudio</div>
+                                        <div class="comparison-cell">✅ 10-30 seg por áudio</div>
+                                    </div>
+                                    <div class="comparison-row">
+                                        <div class="comparison-cell"><strong>Validação</strong></div>
+                                        <div class="comparison-cell">❌ Manual, sujeito a erros</div>
+                                        <div class="comparison-cell">✅ Automática, 95%+ precisão</div>
+                                    </div>
+                                    <div class="comparison-row">
+                                        <div class="comparison-cell"><strong>Tempo Total</strong></div>
+                                        <div class="comparison-cell">❌ Horas de trabalho</div>
+                                        <div class="comparison-cell">✅ Minutos de espera</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="new-workflow">
+                                    <h5>🔄 Novo Fluxo Otimizado:</h5>
+                                    <div class="workflow-new">
+                                        <div class="workflow-step-new">
+                                            <div class="step-number-new">1</div>
+                                            <div class="step-content-new">
+                                                <h6>Upload Áudios</h6>
+                                                <p>Mesmo processo de sempre</p>
+                                            </div>
+                                        </div>
+                                        <div class="workflow-arrow-new">→</div>
+                                        <div class="workflow-step-new highlight">
+                                            <div class="step-number-new">2</div>
+                                            <div class="step-content-new">
+                                                <h6>🤖 Automação CSV</h6>
+                                                <p>IA cria CSV automaticamente</p>
+                                            </div>
+                                        </div>
+                                        <div class="workflow-arrow-new">→</div>
+                                        <div class="workflow-step-new">
+                                            <div class="step-number-new">3</div>
+                                            <div class="step-content-new">
+                                                <h6>Iniciar Treinamento</h6>
+                                                <p>Direto para o treinamento!</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="upload-steps">
+                                <h4>📤 Passo a Passo do Upload (Atualizado):</h4>
+                                
+                                <div class="step-by-step">
+                                    <div class="upload-step">
+                                        <div class="step-header">
+                                            <span class="step-num">1</span>
+                                            <h5>Acesse a Aba "Upload de Dados"</h5>
+                                        </div>
+                                        <div class="step-content">
+                                            <p>Clique na primeira aba da interface para começar o processo de upload.</p>
+                                            <div class="step-image-placeholder">
+                                                <i class="fas fa-mouse-pointer"></i>
+                                                <span>Clique na aba "Upload de Dados"</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="upload-step">
+                                        <div class="step-header">
+                                            <span class="step-num">2</span>
+                                            <h5>Digite o Nome do Modelo</h5>
+                                        </div>
+                                        <div class="step-content">
+                                            <p>Escolha um nome único e descritivo para seu modelo de voz.</p>
+                                            <div class="naming-tips">
+                                                <h6>💡 Dicas de Nomenclatura:</h6>
+                                                <ul>
+                                                    <li>Use apenas letras, números e underscore</li>
+                                                    <li>Seja descritivo: "joao_voz_profissional"</li>
+                                                    <li>Evite espaços e caracteres especiais</li>
+                                                    <li>Inclua versão se necessário: "maria_v2"</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="upload-step">
+                                        <div class="step-header">
+                                            <span class="step-num">3</span>
+                                            <h5>Selecione os Arquivos de Áudio</h5>
+                                        </div>
+                                        <div class="step-content">
+                                            <p>Clique em "Escolher arquivos" e selecione todos os arquivos de áudio.</p>
+                                            <div class="upload-tips">
+                                                <h6>📁 Seleção de Arquivos:</h6>
+                                                <ul>
+                                                    <li>Use Ctrl+A para selecionar todos</li>
+                                                    <li>Ou Ctrl+clique para seleção múltipla</li>
+                                                    <li>Formatos aceitos: WAV, MP3, FLAC</li>
+                                                    <li>Limite: 500MB por upload</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="upload-step highlight-new">
+                                        <div class="step-header">
+                                            <span class="step-num">4</span>
+                                            <h5>🤖 NOVO! Use Automação do CSV</h5>
+                                        </div>
+                                        <div class="step-content">
+                                            <p><strong>Não precisa mais criar CSV manualmente!</strong> Use a nova automação:</p>
+                                            <div class="automation-options">
+                                                <div class="auto-option">
+                                                    <h6>🎤 Transcrição Automática (Recomendado)</h6>
+                                                    <ul>
+                                                        <li>Clique em "Automação do CSV"</li>
+                                                        <li>Escolha "Transcrição Automática"</li>
+                                                        <li>Selecione engine "Whisper" e idioma</li>
+                                                        <li>Aguarde processamento (2-10 min)</li>
+                                                        <li>CSV criado automaticamente!</li>
+                                                    </ul>
+                                                </div>
+                                                
+                                                <div class="auto-option">
+                                                    <h6>📄 Ou Upload de Arquivo de Texto</h6>
+                                                    <ul>
+                                                        <li>Prepare arquivo .txt com transcrições</li>
+                                                        <li>Uma linha por áudio na ordem alfabética</li>
+                                                        <li>Faça upload na aba "Arquivo de Texto"</li>
+                                                        <li>CSV gerado instantaneamente!</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="legacy-option">
+                                                <h6>📝 Método Manual (Legado)</h6>
+                                                <p>Ainda pode fazer upload do metadata.csv criado manualmente, mas a automação é muito mais rápida e precisa!</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="upload-step">
+                                        <div class="step-header">
+                                            <span class="step-num">5</span>
+                                            <h5>Confirme o Upload</h5>
+                                        </div>
+                                        <div class="step-content">
+                                            <p>Clique em "Enviar Arquivos" e aguarde a conclusão do upload.</p>
+                                            <div class="progress-info">
+                                                <h6>⏱️ Durante o Upload:</h6>
+                                                <ul>
+                                                    <li>Barra de progresso mostra andamento</li>
+                                                    <li>Não feche a página durante o processo</li>
+                                                    <li>Mensagem de sucesso confirma conclusão</li>
+                                                    <li>Arquivos ficam disponíveis para treinamento</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 5.5. Automação do CSV -->
+                    <section id="csv-automation" class="manual-section">
+                        <h2><i class="fas fa-robot"></i> 5.5. Automação do CSV (NOVO!)</h2>
+                        <div class="section-content">
+                            <div class="automation-intro">
+                                <h4>🚀 Revolução na Criação do CSV</h4>
+                                <p>A funcionalidade mais revolucionária do sistema: <strong>automação completa do arquivo metadata.csv</strong> usando inteligência artificial e outros métodos avançados.</p>
+                                
+                                <div class="automation-stats">
+                                    <div class="stat-item">
+                                        <div class="stat-number">95%+</div>
+                                        <div class="stat-label">Precisão da IA</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">90%</div>
+                                        <div class="stat-label">Economia de Tempo</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">3</div>
+                                        <div class="stat-label">Métodos Disponíveis</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">99+</div>
+                                        <div class="stat-label">Idiomas Suportados</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="automation-methods-detailed">
+                                <h4>🎯 Métodos de Automação Detalhados</h4>
+                                
+                                <div class="method-detailed">
+                                    <h5>🎤 1. Transcrição Automática com IA</h5>
+                                    <div class="method-content">
+                                        <div class="method-description">
+                                            <p>Use modelos de IA de última geração para transcrever automaticamente seus arquivos de áudio.</p>
+                                        </div>
+                                        
+                                        <div class="engines-comparison">
+                                            <h6>🧠 Engines Disponíveis:</h6>
+                                            <div class="engines-grid">
+                                                <div class="engine-card">
+                                                    <h6>🥇 Whisper (OpenAI)</h6>
+                                                    <div class="engine-specs">
+                                                        <span class="spec">Precisão: 95%+</span>
+                                                        <span class="spec">Idiomas: 99+</span>
+                                                        <span class="spec">Offline: ✅</span>
+                                                        <span class="spec">Velocidade: Moderada</span>
+                                                    </div>
+                                                    <p class="engine-best">Melhor para: Qualquer tipo de áudio</p>
+                                                </div>
+                                                
+                                                <div class="engine-card">
+                                                    <h6>🌐 Google Speech</h6>
+                                                    <div class="engine-specs">
+                                                        <span class="spec">Precisão: 90%+</span>
+                                                        <span class="spec">Idiomas: 120+</span>
+                                                        <span class="spec">Online: ⚡</span>
+                                                        <span class="spec">Velocidade: Rápida</span>
+                                                    </div>
+                                                    <p class="engine-best">Melhor para: Áudio limpo, conexão estável</p>
+                                                </div>
+                                                
+                                                <div class="engine-card">
+                                                    <h6>🧠 Wav2Vec2</h6>
+                                                    <div class="engine-specs">
+                                                        <span class="spec">Precisão: 85%+</span>
+                                                        <span class="spec">Idiomas: Inglês</span>
+                                                        <span class="spec">Offline: ✅</span>
+                                                        <span class="spec">Velocidade: Rápida</span>
+                                                    </div>
+                                                    <p class="engine-best">Melhor para: Áudio em inglês</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="transcription-process">
+                                            <h6>⚙️ Como Funciona:</h6>
+                                            <div class="process-flow">
+                                                <div class="process-item">
+                                                    <div class="process-icon">🎵</div>
+                                                    <div class="process-text">
+                                                        <strong>1. Análise de Áudio</strong>
+                                                        <p>IA analisa características do áudio</p>
+                                                    </div>
+                                                </div>
+                                                <div class="process-arrow">→</div>
+                                                <div class="process-item">
+                                                    <div class="process-icon">🧠</div>
+                                                    <div class="process-text">
+                                                        <strong>2. Reconhecimento</strong>
+                                                        <p>Converte áudio em texto</p>
+                                                    </div>
+                                                </div>
+                                                <div class="process-arrow">→</div>
+                                                <div class="process-item">
+                                                    <div class="process-icon">✨</div>
+                                                    <div class="process-text">
+                                                        <strong>3. Pós-processamento</strong>
+                                                        <p>Limpa e formata o texto</p>
+                                                    </div>
+                                                </div>
+                                                <div class="process-arrow">→</div>
+                                                <div class="process-item">
+                                                    <div class="process-icon">📄</div>
+                                                    <div class="process-text">
+                                                        <strong>4. Gera CSV</strong>
+                                                        <p>Cria metadata.csv automaticamente</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="method-detailed">
+                                    <h5>📄 2. Upload de Arquivo de Texto</h5>
+                                    <div class="method-content">
+                                        <p>Ideal quando você já tem as transcrições prontas em um arquivo de texto.</p>
+                                        
+                                        <div class="text-file-format">
+                                            <h6>📋 Formato do Arquivo .txt:</h6>
+                                            <div class="format-example">
+                                                <pre class="text-format">Primeira transcrição para audio001.wav
+Segunda transcrição para audio002.wav
+Terceira transcrição para audio003.wav
+...</pre>
+                                            </div>
+                                            <div class="format-rules">
+                                                <h6>📏 Regras Importantes:</h6>
+                                                <ul>
+                                                    <li>Uma linha por arquivo de áudio</li>
+                                                    <li>Ordem alfabética dos arquivos</li>
+                                                    <li>Codificação UTF-8 para acentos</li>
+                                                    <li>Sem linhas vazias</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="method-detailed">
+                                    <h5>✏️ 3. Editor Manual Integrado</h5>
+                                    <div class="method-content">
+                                        <p>Editor avançado com validação em tempo real para criar ou editar CSV diretamente na interface.</p>
+                                        
+                                        <div class="editor-features">
+                                            <h6>🛠️ Recursos do Editor:</h6>
+                                            <div class="features-grid">
+                                                <div class="feature-item">
+                                                    <i class="fas fa-check-circle"></i>
+                                                    <span>Validação em tempo real</span>
+                                                </div>
+                                                <div class="feature-item">
+                                                    <i class="fas fa-palette"></i>
+                                                    <span>Syntax highlighting</span>
+                                                </div>
+                                                <div class="feature-item">
+                                                    <i class="fas fa-folder-open"></i>
+                                                    <span>Carregar CSV existente</span>
+                                                </div>
+                                                <div class="feature-item">
+                                                    <i class="fas fa-save"></i>
+                                                    <span>Salvamento inteligente</span>
+                                                </div>
+                                                <div class="feature-item">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                    <span>Alertas de erro</span>
+                                                </div>
+                                                <div class="feature-item">
+                                                    <i class="fas fa-history"></i>
+                                                    <span>Backup automático</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="automation-tutorial">
+                                <h4>📚 Tutorial Passo a Passo</h4>
+                                
+                                <div class="tutorial-method">
+                                    <h5>🎤 Usando Transcrição Automática:</h5>
+                                    <div class="tutorial-steps">
+                                        <div class="tutorial-step">
+                                            <div class="step-number">1</div>
+                                            <div class="step-content">
+                                                <h6>Instalar Dependências</h6>
+                                                <p>Execute uma vez: <code>python install_transcription_deps.py</code></p>
+                                            </div>
+                                        </div>
+                                        <div class="tutorial-step">
+                                            <div class="step-number">2</div>
+                                            <div class="step-content">
+                                                <h6>Upload dos Áudios</h6>
+                                                <p>Faça upload dos arquivos de áudio normalmente</p>
+                                            </div>
+                                        </div>
+                                        <div class="tutorial-step">
+                                            <div class="step-number">3</div>
+                                            <div class="step-content">
+                                                <h6>Acessar Automação</h6>
+                                                <p>Clique em "Automação do CSV" na aba Upload</p>
+                                            </div>
+                                        </div>
+                                        <div class="tutorial-step">
+                                            <div class="step-number">4</div>
+                                            <div class="step-content">
+                                                <h6>Configurar Transcrição</h6>
+                                                <p>Escolha engine "Whisper" e idioma "Português"</p>
+                                            </div>
+                                        </div>
+                                        <div class="tutorial-step">
+                                            <div class="step-number">5</div>
+                                            <div class="step-content">
+                                                <h6>Iniciar Processo</h6>
+                                                <p>Clique "Iniciar Transcrição Automática" e aguarde</p>
+                                            </div>
+                                        </div>
+                                        <div class="tutorial-step">
+                                            <div class="step-number">6</div>
+                                            <div class="step-content">
+                                                <h6>Verificar Resultados</h6>
+                                                <p>Revise transcrições e prossiga para treinamento</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="automation-tips">
+                                <h4>💡 Dicas e Melhores Práticas</h4>
+                                
+                                <div class="tips-grid">
+                                    <div class="tip-card">
+                                        <h6>🎯 Para Máxima Precisão</h6>
+                                        <ul>
+                                            <li>Use áudio limpo e claro</li>
+                                            <li>Prefira Whisper para qualidade</li>
+                                            <li>Configure idioma correto</li>
+                                            <li>Revise resultados importantes</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="tip-card">
+                                        <h6>⚡ Para Máxima Velocidade</h6>
+                                        <ul>
+                                            <li>Use Google Speech (online)</li>
+                                            <li>Processe em lotes menores</li>
+                                            <li>Feche outros programas</li>
+                                            <li>Use SSD se disponível</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="tip-card">
+                                        <h6>🔧 Solução de Problemas</h6>
+                                        <ul>
+                                            <li>Erro de memória: Use Google</li>
+                                            <li>Transcrição ruim: Melhore áudio</li>
+                                            <li>Engine indisponível: Reinstale deps</li>
+                                            <li>Formato incorreto: Use editor</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="tip-card">
+                                        <h6>📊 Otimização por Cenário</h6>
+                                        <ul>
+                                            <li>Podcast: Whisper + medium</li>
+                                            <li>Música: Whisper + large</li>
+                                            <li>Chamadas: Google + filtros</li>
+                                            <li>Multi-speaker: Whisper + detecção</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 6. Treinamento Local -->
+                    <section id="local-training" class="manual-section">
+                        <h2><i class="fas fa-desktop"></i> 6. Treinamento Local</h2>
+                        <div class="section-content">
+                            <div class="training-guide">
+                                <h4>🖥️ Treinamento no Seu Computador:</h4>
+                                
+                                <div class="training-config">
+                                    <h5>⚙️ Configurações de Treinamento:</h5>
+                                    <div class="config-options">
+                                        <div class="config-item">
+                                            <h6>🌍 Idioma</h6>
+                                            <p>Selecione o idioma dos textos (pt-br para português brasileiro)</p>
+                                        </div>
+                                        <div class="config-item">
+                                            <h6>🎯 Qualidade</h6>
+                                            <ul>
+                                                <li><strong>Baixa:</strong> Mais rápido, menor qualidade</li>
+                                                <li><strong>Média:</strong> Balanceado (recomendado)</li>
+                                                <li><strong>Alta:</strong> Melhor qualidade, mais lento</li>
+                                            </ul>
+                                        </div>
+                                        <div class="config-item">
+                                            <h6>🔊 Taxa de Amostragem</h6>
+                                            <p>22.05 kHz recomendado para melhor qualidade</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="training-process">
+                                    <h5>🚀 Processo de Treinamento:</h5>
+                                    <div class="process-steps">
+                                        <div class="process-step">
+                                            <h6>1. Pré-processamento</h6>
+                                            <p>Normalização de áudio e conversão de texto para fonemas</p>
+                                            <div class="time-estimate">⏱️ 5-15 minutos</div>
+                                        </div>
+                                        <div class="process-step">
+                                            <h6>2. Treinamento Neural</h6>
+                                            <p>Modelo aprende a associar texto com características da voz</p>
+                                            <div class="time-estimate">⏱️ 1-8 horas</div>
+                                        </div>
+                                        <div class="process-step">
+                                            <h6>3. Exportação</h6>
+                                            <p>Conversão para formato ONNX otimizado</p>
+                                            <div class="time-estimate">⏱️ 2-5 minutos</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="monitoring-local">
+                                    <h5>📊 Monitoramento:</h5>
+                                    <ul>
+                                        <li>Acompanhe progresso em tempo real</li>
+                                        <li>Observe métricas de loss (deve diminuir)</li>
+                                        <li>Verifique logs para detectar problemas</li>
+                                        <li>Interrompa se necessário (Ctrl+C)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 7. Export Train -->
+                    <section id="cloud-export" class="manual-section">
+                        <h2><i class="fas fa-cloud"></i> 7. Export Train (Treinamento em Nuvem)</h2>
+                        <div class="section-content">
+                            <div class="cloud-guide">
+                                <h4>☁️ Treinamento com GPU na Nuvem:</h4>
+                                
+                                <div class="platform-comparison">
+                                    <h5>🏆 Comparação de Plataformas:</h5>
+                                    <div class="platforms-table">
+                                        <div class="platform-row header">
+                                            <div class="platform-cell">Plataforma</div>
+                                            <div class="platform-cell">GPU</div>
+                                            <div class="platform-cell">Tempo Gratuito</div>
+                                            <div class="platform-cell">Vantagens</div>
+                                        </div>
+                                        <div class="platform-row">
+                                            <div class="platform-cell"><strong>Google Colab</strong></div>
+                                            <div class="platform-cell">T4, K80, P100</div>
+                                            <div class="platform-cell">12h contínuas</div>
+                                            <div class="platform-cell">Fácil, gratuito</div>
+                                        </div>
+                                        <div class="platform-row">
+                                            <div class="platform-cell"><strong>Kaggle</strong></div>
+                                            <div class="platform-cell">P100 (16GB)</div>
+                                            <div class="platform-cell">30h/semana</div>
+                                            <div class="platform-cell">GPU potente</div>
+                                        </div>
+                                        <div class="platform-row">
+                                            <div class="platform-cell"><strong>CodeSphere</strong></div>
+                                            <div class="platform-cell">Dedicada</div>
+                                            <div class="platform-cell">Plano pago</div>
+                                            <div class="platform-cell">IDE completo</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="export-process">
+                                    <h5>📦 Processo de Exportação:</h5>
+                                    <div class="export-steps">
+                                        <div class="export-step">
+                                            <h6>1. Selecionar Dataset</h6>
+                                            <p>Escolha o dataset já enviado na aba Upload</p>
+                                        </div>
+                                        <div class="export-step">
+                                            <h6>2. Escolher Plataforma</h6>
+                                            <p>Clique no card da plataforma desejada (Colab recomendado)</p>
+                                        </div>
+                                        <div class="export-step">
+                                            <h6>3. Configurar Treinamento</h6>
+                                            <p>Defina qualidade (Alta para GPU) e número de épocas</p>
+                                        </div>
+                                        <div class="export-step">
+                                            <h6>4. Exportar</h6>
+                                            <p>Sistema cria pacote otimizado e notebook</p>
+                                        </div>
+                                        <div class="export-step">
+                                            <h6>5. Executar na Nuvem</h6>
+                                            <p>Abra notebook, faça upload do pacote e execute</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="cloud-advantages">
+                                    <h5>⚡ Vantagens do Treinamento em Nuvem:</h5>
+                                    <div class="advantages-grid">
+                                        <div class="advantage-item">
+                                            <i class="fas fa-rocket"></i>
+                                            <h6>Velocidade</h6>
+                                            <p>10-50x mais rápido com GPU</p>
+                                        </div>
+                                        <div class="advantage-item">
+                                            <i class="fas fa-star"></i>
+                                            <h6>Qualidade</h6>
+                                            <p>Modelos mais precisos</p>
+                                        </div>
+                                        <div class="advantage-item">
+                                            <i class="fas fa-battery-full"></i>
+                                            <h6>Recursos</h6>
+                                            <p>Não consome seu computador</p>
+                                        </div>
+                                        <div class="advantage-item">
+                                            <i class="fas fa-download"></i>
+                                            <h6>Automação</h6>
+                                            <p>Download automático</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 8. Monitoramento -->
+                    <section id="monitoring" class="manual-section">
+                        <h2><i class="fas fa-chart-line"></i> 8. Monitoramento do Treinamento</h2>
+                        <div class="section-content">
+                            <div class="monitoring-guide">
+                                <h4>📊 Acompanhamento em Tempo Real:</h4>
+                                
+                                <div class="metrics-explanation">
+                                    <h5>📈 Métricas Importantes:</h5>
+                                    <div class="metrics-list">
+                                        <div class="metric-item">
+                                            <h6><i class="fas fa-chart-line"></i> Loss (Perda)</h6>
+                                            <p>Indica qualidade do aprendizado. Deve diminuir ao longo do tempo.</p>
+                                            <div class="metric-range">
+                                                <span class="good">Bom: < 0.3</span>
+                                                <span class="average">Médio: 0.3-0.7</span>
+                                                <span class="poor">Ruim: > 0.7</span>
+                                            </div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <h6><i class="fas fa-microchip"></i> Uso da GPU</h6>
+                                            <p>Percentual de utilização da placa de vídeo.</p>
+                                            <div class="metric-range">
+                                                <span class="good">Ideal: 80-95%</span>
+                                                <span class="average">OK: 60-80%</span>
+                                                <span class="poor">Baixo: < 60%</span>
+                                            </div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <h6><i class="fas fa-memory"></i> Uso da RAM</h6>
+                                            <p>Memória utilizada durante o treinamento.</p>
+                                            <div class="metric-range">
+                                                <span class="good">Normal: < 80%</span>
+                                                <span class="average">Alto: 80-90%</span>
+                                                <span class="poor">Crítico: > 90%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="monitoring-tips">
+                                    <h5>💡 Dicas de Monitoramento:</h5>
+                                    <div class="tips-grid">
+                                        <div class="tip-item">
+                                            <h6>🎯 Loss Estável</h6>
+                                            <p>Se o loss parar de diminuir por muitas épocas, o modelo pode ter convergido</p>
+                                        </div>
+                                        <div class="tip-item">
+                                            <h6>⚡ GPU Subutilizada</h6>
+                                            <p>Aumente o batch size se a GPU não estiver sendo totalmente utilizada</p>
+                                        </div>
+                                        <div class="tip-item">
+                                            <h6>🔥 Overfitting</h6>
+                                            <p>Se o loss de validação aumentar, pare o treinamento</p>
+                                        </div>
+                                        <div class="tip-item">
+                                            <h6>⏰ Tempo Estimado</h6>
+                                            <p>Use para planejar quando verificar o progresso</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 9. Teste de Modelos -->
+                    <section id="testing" class="manual-section">
+                        <h2><i class="fas fa-play-circle"></i> 9. Teste de Modelos</h2>
+                        <div class="section-content">
+                            <div class="testing-guide">
+                                <h4>🎤 Validação da Qualidade:</h4>
+                                
+                                <div class="test-process">
+                                    <h5>🧪 Como Testar:</h5>
+                                    <div class="test-steps">
+                                        <div class="test-step">
+                                            <h6>1. Acesse a Aba "Teste de Voz"</h6>
+                                            <p>Navegue até a última aba da interface</p>
+                                        </div>
+                                        <div class="test-step">
+                                            <h6>2. Selecione o Modelo</h6>
+                                            <p>Escolha um modelo treinado na lista dropdown</p>
+                                        </div>
+                                        <div class="test-step">
+                                            <h6>3. Digite o Texto</h6>
+                                            <p>Escreva o texto que deseja sintetizar</p>
+                                        </div>
+                                        <div class="test-step">
+                                            <h6>4. Gere o Áudio</h6>
+                                            <p>Clique em "Gerar Áudio" e aguarde o processamento</p>
+                                        </div>
+                                        <div class="test-step">
+                                            <h6>5. Avalie o Resultado</h6>
+                                            <p>Ouça o áudio gerado e avalie a qualidade</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="quality-criteria">
+                                    <h5>✅ Critérios de Qualidade:</h5>
+                                    <div class="criteria-list">
+                                        <div class="criteria-item">
+                                            <h6><i class="fas fa-volume-up"></i> Clareza</h6>
+                                            <p>Todas as palavras devem ser compreensíveis</p>
+                                        </div>
+                                        <div class="criteria-item">
+                                            <h6><i class="fas fa-user-tie"></i> Naturalidade</h6>
+                                            <p>A voz deve soar natural, não robótica</p>
+                                        </div>
+                                        <div class="criteria-item">
+                                            <h6><i class="fas fa-music"></i> Entonação</h6>
+                                            <p>Deve respeitar pontuação e contexto</p>
+                                        </div>
+                                        <div class="criteria-item">
+                                            <h6><i class="fas fa-fingerprint"></i> Similaridade</h6>
+                                            <p>Deve soar como a voz original</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="test-texts">
+                                    <h5>📝 Textos de Teste Recomendados:</h5>
+                                    <div class="test-examples">
+                                        <div class="test-example">
+                                            <h6>Básico:</h6>
+                                            <p>"Olá, meu nome é [seu nome] e esta é minha voz clonada."</p>
+                                        </div>
+                                        <div class="test-example">
+                                            <h6>Números:</h6>
+                                            <p>"Hoje é dia 15 de março de 2024, são 14 horas e 30 minutos."</p>
+                                        </div>
+                                        <div class="test-example">
+                                            <h6>Pontuação:</h6>
+                                            <p>"Que incrível! Você conseguiu treinar sua própria voz. Parabéns!"</p>
+                                        </div>
+                                        <div class="test-example">
+                                            <h6>Complexo:</h6>
+                                            <p>"A inteligência artificial está revolucionando a síntese de voz, permitindo criar modelos personalizados com qualidade profissional."</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 10. Solução de Problemas -->
+                    <section id="troubleshooting" class="manual-section">
+                        <h2><i class="fas fa-tools"></i> 10. Solução de Problemas</h2>
+                        <div class="section-content">
+                            <div class="troubleshooting-guide">
+                                <h4>🔧 Problemas Comuns e Soluções:</h4>
+                                
+                                <div class="problem-category">
+                                    <h5><i class="fas fa-upload"></i> Problemas de Upload</h5>
+                                    <div class="problems-list">
+                                        <div class="problem-item">
+                                            <h6>❌ "Arquivo muito grande"</h6>
+                                            <div class="solution">
+                                                <p><strong>Solução:</strong></p>
+                                                <ul>
+                                                    <li>Comprima áudios para MP3 (qualidade 192kbps)</li>
+                                                    <li>Divida em lotes menores</li>
+                                                    <li>Remova arquivos desnecessários</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="problem-item">
+                                            <h6>❌ "Erro no formato CSV"</h6>
+                                            <div class="solution">
+                                                <p><strong>Solução:</strong></p>
+                                                <ul>
+                                                    <li>Use apenas "|" como separador</li>
+                                                    <li>Salve em codificação UTF-8</li>
+                                                    <li>Verifique correspondência áudio-texto</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="problem-category">
+                                    <h5><i class="fas fa-cogs"></i> Problemas de Treinamento</h5>
+                                    <div class="problems-list">
+                                        <div class="problem-item">
+                                            <h6>❌ "Erro de memória"</h6>
+                                            <div class="solution">
+                                                <p><strong>Solução:</strong></p>
+                                                <ul>
+                                                    <li>Reduza o batch size</li>
+                                                    <li>Use qualidade "baixa"</li>
+                                                    <li>Feche outros programas</li>
+                                                    <li>Use Export Train (nuvem)</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="problem-item">
+                                            <h6>❌ "Loss não diminui"</h6>
+                                            <div class="solution">
+                                                <p><strong>Solução:</strong></p>
+                                                <ul>
+                                                    <li>Verifique qualidade dos dados</li>
+                                                    <li>Aumente número de épocas</li>
+                                                    <li>Ajuste learning rate</li>
+                                                    <li>Adicione mais dados de treinamento</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="problem-category">
+                                    <h5><i class="fas fa-volume-up"></i> Problemas de Qualidade</h5>
+                                    <div class="problems-list">
+                                        <div class="problem-item">
+                                            <h6>❌ "Voz robótica"</h6>
+                                            <div class="solution">
+                                                <p><strong>Solução:</strong></p>
+                                                <ul>
+                                                    <li>Treine por mais épocas</li>
+                                                    <li>Use mais dados de treinamento</li>
+                                                    <li>Melhore qualidade do áudio original</li>
+                                                    <li>Ajuste parâmetros de inferência</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="problem-item">
+                                            <h6>❌ "Pronúncia incorreta"</h6>
+                                            <div class="solution">
+                                                <p><strong>Solução:</strong></p>
+                                                <ul>
+                                                    <li>Verifique transcrições no CSV</li>
+                                                    <li>Adicione exemplos da palavra problemática</li>
+                                                    <li>Use textos mais variados</li>
+                                                    <li>Ajuste configuração de idioma</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="help-resources">
+                                    <h5>🆘 Recursos de Ajuda:</h5>
+                                    <div class="resources-list">
+                                        <div class="resource-item">
+                                            <h6><i class="fas fa-file-alt"></i> Logs do Sistema</h6>
+                                            <p>Verifique os logs na interface para detalhes dos erros</p>
+                                        </div>
+                                        <div class="resource-item">
+                                            <h6><i class="fas fa-chart-bar"></i> Métricas de Treinamento</h6>
+                                            <p>Use TensorBoard para análise detalhada</p>
+                                        </div>
+                                        <div class="resource-item">
+                                            <h6><i class="fas fa-users"></i> Comunidade</h6>
+                                            <p>Participe de fóruns e grupos de discussão</p>
+                                        </div>
+                                        <div class="resource-item">
+                                            <h6><i class="fas fa-book"></i> Documentação</h6>
+                                            <p>Consulte a documentação oficial do Piper TTS</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Piper TTS - Interface de Treinamento | 
+           <a href="https://github.com/rhasspy/piper" target="_blank">
+               <i class="fab fa-github"></i> GitHub
+           </a>
+        </p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

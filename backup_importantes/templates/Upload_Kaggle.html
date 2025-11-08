@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Manual - Kaggle Notebooks</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .upload-guide {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .step-card {
+            background: linear-gradient(135deg, #20beff 0%, #1a73e8 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .step-number {
+            background: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .code-block {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .warning-box {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .success-box {
+            background: #51cf66;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .info-box {
+            background: #339af0;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .kaggle-box {
+            background: #20beff;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .file-structure {
+            background: rgba(0,0,0,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #20beff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+        .advantage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .advantage-card {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Voltar
+    </a>
+
+    <div class="upload-guide">
+        <header style="text-align: center; margin-bottom: 40px;">
+            <h1><i class="fas fa-chart-line"></i> Upload Manual - Kaggle Notebooks</h1>
+            <p>Guia completo para treinar seu modelo de voz no Kaggle com GPU P100</p>
+        </header>
+
+        <!-- Vantagens do Kaggle -->
+        <div class="step-card" style="background: linear-gradient(135deg, #20beff 0%, #1a73e8 100%);">
+            <h2><i class="fas fa-star"></i> Por que Kaggle?</h2>
+            <div class="advantage-grid">
+                <div class="advantage-card">
+                    <i class="fas fa-microchip" style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <h4>GPU P100</h4>
+                    <p>16GB VRAM<br>Muito mais potente</p>
+                </div>
+                <div class="advantage-card">
+                    <i class="fas fa-clock" style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <h4>30h/semana</h4>
+                    <p>Mais tempo<br>que o Colab</p>
+                </div>
+                <div class="advantage-card">
+                    <i class="fas fa-database" style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <h4>Datasets</h4>
+                    <p>Compartilhamento<br>fácil de dados</p>
+                </div>
+                <div class="advantage-card">
+                    <i class="fas fa-users" style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <h4>Comunidade</h4>
+                    <p>Notebooks públicos<br>e colaboração</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Passo 1: Criar Conta Kaggle -->
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <h2><i class="fas fa-user-plus"></i> Criar Conta no Kaggle</h2>
+            <p>Primeiro, você precisa de uma conta verificada no Kaggle:</p>
+            
+            <ol style="font-size: 16px; line-height: 1.6;">
+                <li>Acesse <a href="https://www.kaggle.com" target="_blank" style="color: #ffeb3b;">kaggle.com</a></li>
+                <li>Clique em <strong>"Register"</strong></li>
+                <li>Complete seu perfil</li>
+                <li><strong>Verifique seu número de telefone</strong> (necessário para GPU)</li>
+            </ol>
+
+            <div class="warning-box">
+                <strong>⚠️ Importante:</strong> A verificação por telefone é obrigatória para usar GPU no Kaggle!
+            </div>
+        </div>
+
+        <!-- Passo 2: Preparar Dataset -->
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <h2><i class="fas fa-folder-open"></i> Preparar Dataset</h2>
+            <p>Organize seus arquivos de treinamento:</p>
+            
+            <div class="file-structure">
+meu_modelo_piper/
+├── wav/
+│   ├── audio001.wav
+│   ├── audio002.wav
+│   ├── audio003.wav
+│   └── ... (todos os arquivos .wav)
+├── metadata.csv
+└── README.md (opcional)
+            </div>
+
+            <div class="kaggle-box">
+                <strong>📋 Formato do metadata.csv:</strong><br>
+                <code>audio001|Texto correspondente ao áudio 001</code><br>
+                <code>audio002|Texto correspondente ao áudio 002</code>
+            </div>
+        </div>
+
+        <!-- Passo 3: Criar Dataset no Kaggle -->
+        <div class="step-card">
+            <div class="step-number">3</div>
+            <h2><i class="fas fa-database"></i> Criar Dataset no Kaggle</h2>
+            <p>Faça upload dos seus dados como um dataset:</p>
+            
+            <ol style="font-size: 16px; line-height: 1.6;">
+                <li>Acesse <a href="https://www.kaggle.com/datasets" target="_blank" style="color: #ffeb3b;">kaggle.com/datasets</a></li>
+                <li>Clique em <strong>"New Dataset"</strong></li>
+                <li>Arraste sua pasta <code>meu_modelo_piper</code></li>
+                <li>Título: <code>Meu Modelo de Voz Piper</code></li>
+                <li>Visibilidade: <strong>Private</strong> (recomendado)</li>
+                <li>Clique <strong>"Create"</strong></li>
+            </ol>
+
+            <div class="info-box">
+                <strong>💡 Dica:</strong> Datasets privados mantêm seus dados seguros e são gratuitos no Kaggle
+            </div>
+        </div>
+
+        <!-- Passo 4: Criar Notebook -->
+        <div class="step-card">
+            <div class="step-number">4</div>
+            <h2><i class="fas fa-book"></i> Criar Notebook de Treinamento</h2>
+            <p>Crie um novo notebook para o treinamento:</p>
+            
+            <ol style="font-size: 16px; line-height: 1.6;">
+                <li>Acesse <a href="https://www.kaggle.com/code" target="_blank" style="color: #ffeb3b;">kaggle.com/code</a></li>
+                <li>Clique em <strong>"New Notebook"</strong></li>
+                <li>Título: <code>Treinamento Piper TTS</code></li>
+                <li>Tipo: <strong>Notebook</strong></li>
+                <li>Linguagem: <strong>Python</strong></li>
+            </ol>
+
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="https://www.kaggle.com/code/new" 
+                   target="_blank" 
+                   style="background: #20beff; color: white; padding: 15px 30px; border-radius: 25px; text-decoration: none; display: inline-block; font-weight: bold;">
+                    <i class="fas fa-plus"></i> Criar Notebook Kaggle
+                </a>
+            </div>
+        </div>
+
+        <!-- Passo 5: Configurar GPU -->
+        <div class="step-card">
+            <div class="step-number">5</div>
+            <h2><i class="fas fa-microchip"></i> Ativar GPU P100</h2>
+            <p>Configure o notebook para usar GPU:</p>
+            
+            <ol style="font-size: 16px; line-height: 1.6;">
+                <li>No painel direito, clique em <strong>"Settings"</strong></li>
+                <li>Accelerator: <strong>GPU P100</strong></li>
+                <li>Internet: <strong>On</strong></li>
+                <li>Clique <strong>"Save"</strong></li>
+            </ol>
+
+            <div class="success-box">
+                <strong>🚀 GPU P100:</strong> 16GB VRAM, perfeita para modelos grandes!
+            </div>
+        </div>
+
+        <!-- Passo 6: Adicionar Dataset -->
+        <div class="step-card">
+            <div class="step-number">6</div>
+            <h2><i class="fas fa-link"></i> Conectar Dataset</h2>
+            <p>Adicione seu dataset ao notebook:</p>
+            
+            <ol style="font-size: 16px; line-height: 1.6;">
+                <li>No painel direito, clique em <strong>"+ Add data"</strong></li>
+                <li>Aba <strong>"Your Datasets"</strong></li>
+                <li>Selecione seu dataset criado</li>
+                <li>Clique <strong>"Add"</strong></li>
+            </ol>
+
+            <div class="info-box">
+                <strong>📁 Caminho dos dados:</strong> <code>/kaggle/input/seu-dataset-name/</code>
+            </div>
+        </div>
+
+        <!-- Passo 7: Instalar Dependências -->
+        <div class="step-card">
+            <div class="step-number">7</div>
+            <h2><i class="fas fa-download"></i> Instalar Piper</h2>
+            <p>Execute estas células no seu notebook:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+# Célula 1: Instalar dependências do sistema
+import subprocess
+import sys
+
+def run_command(cmd):
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    print(result.stdout)
+    if result.stderr:
+        print("STDERR:", result.stderr)
+
+# Instalar espeak-ng
+run_command("apt-get update")
+run_command("apt-get install -y espeak-ng")
+
+print("✅ Dependências do sistema instaladas!")
+            </div>
+
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+# Célula 2: Clonar e instalar Piper
+import os
+
+# Clonar repositório
+if not os.path.exists('/kaggle/working/piper'):
+    run_command("cd /kaggle/working && git clone https://github.com/rhasspy/piper.git")
+
+# Instalar Piper
+run_command("cd /kaggle/working/piper && pip install -e .")
+
+# Instalar PyTorch com CUDA
+run_command("pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118")
+
+print("🚀 Piper instalado com sucesso!")
+            </div>
+        </div>
+
+        <!-- Passo 8: Configurar Treinamento -->
+        <div class="step-card">
+            <div class="step-number">8</div>
+            <h2><i class="fas fa-cogs"></i> Configurar Treinamento</h2>
+            <p>Configure os parâmetros otimizados para P100:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+# Célula 3: Configuração de treinamento
+import json
+import os
+
+# Encontrar o dataset
+dataset_path = None
+for root, dirs, files in os.walk('/kaggle/input'):
+    if 'metadata.csv' in files:
+        dataset_path = root
+        break
+
+if not dataset_path:
+    raise Exception("Dataset não encontrado! Verifique se adicionou corretamente.")
+
+print(f"📁 Dataset encontrado em: {dataset_path}")
+
+# Configuração otimizada para P100
+config = {
+    "audio": {
+        "sample_rate": 22050,
+        "channels": 1
+    },
+    "model": {
+        "hidden_channels": 256,  # Maior para P100
+        "filter_channels": 1024,  # Maior para P100
+        "n_heads": 4,
+        "n_layers": 8,
+        "kernel_size": 3,
+        "p_dropout": 0.1
+    },
+    "training": {
+        "batch_size": 16,  # P100 suporta batch maior
+        "learning_rate": 0.0002,
+        "epochs": 300,  # Mais épocas para melhor qualidade
+        "save_every": 25,
+        "mixed_precision": True  # FP16 para P100
+    },
+    "dataset": {
+        "language": "pt-br",
+        "dataset_path": dataset_path,
+        "metadata_path": os.path.join(dataset_path, "metadata.csv")
+    }
+}
+
+# Salvar configuração
+with open('/kaggle/working/piper_config.json', 'w') as f:
+    json.dump(config, f, indent=2)
+
+print("⚙️ Configuração P100 salva!")
+            </div>
+        </div>
+
+        <!-- Passo 9: Iniciar Treinamento -->
+        <div class="step-card">
+            <div class="step-number">9</div>
+            <h2><i class="fas fa-play"></i> Iniciar Treinamento</h2>
+            <p>Execute o treinamento otimizado:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+# Célula 4: Iniciar treinamento
+import subprocess
+import os
+
+# Criar diretório de saída
+os.makedirs('/kaggle/working/output', exist_ok=True)
+
+# Comando de treinamento otimizado para P100
+train_cmd = f"""
+cd /kaggle/working/piper && python -m piper_train \\
+    --dataset-dir {dataset_path} \\
+    --output-dir /kaggle/working/output \\
+    --config /kaggle/working/piper_config.json \\
+    --batch-size 16 \\
+    --mixed-precision \\
+    --save-every 25
+"""
+
+print("🎯 Iniciando treinamento com GPU P100...")
+print("📊 Configuração:")
+print(f"  • Dataset: {dataset_path}")
+print(f"  • Batch Size: 16 (otimizado para P100)")
+print(f"  • Mixed Precision: Ativado")
+print(f"  • Épocas: 300")
+
+# Executar treinamento
+process = subprocess.Popen(train_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+for line in process.stdout:
+    print(line.strip())
+
+print("✅ Treinamento concluído!")
+            </div>
+
+            <div class="kaggle-box">
+                <strong>⏱️ Tempo Estimado com P100:</strong><br>
+                • 30 min de áudio: 1-2 horas<br>
+                • 1 hora de áudio: 2-4 horas<br>
+                • 2 horas de áudio: 4-6 horas
+            </div>
+        </div>
+
+        <!-- Passo 10: Monitorar GPU -->
+        <div class="step-card">
+            <div class="step-number">10</div>
+            <h2><i class="fas fa-chart-line"></i> Monitorar GPU P100</h2>
+            <p>Acompanhe o uso da GPU em tempo real:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+# Célula 5: Monitoramento (execute em paralelo)
+import time
+import subprocess
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+def monitor_gpu():
+    gpu_usage = []
+    memory_usage = []
+    
+    for i in range(60):  # Monitorar por 60 iterações
+        try:
+            # Obter informações da GPU
+            result = subprocess.run([
+                'nvidia-smi', 
+                '--query-gpu=utilization.gpu,memory.used,memory.total',
+                '--format=csv,noheader,nounits'
+            ], capture_output=True, text=True)
+            
+            if result.stdout:
+                gpu_util, mem_used, mem_total = result.stdout.strip().split(', ')
+                gpu_usage.append(int(gpu_util))
+                memory_usage.append((int(mem_used) / int(mem_total)) * 100)
+                
+                # Plotar gráfico
+                clear_output(wait=True)
+                
+                fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+                
+                ax1.plot(gpu_usage, 'b-', linewidth=2)
+                ax1.set_title('GPU P100 - Utilização (%)')
+                ax1.set_ylim(0, 100)
+                ax1.grid(True)
+                
+                ax2.plot(memory_usage, 'r-', linewidth=2)
+                ax2.set_title('GPU P100 - Memória (%)')
+                ax2.set_ylim(0, 100)
+                ax2.grid(True)
+                
+                plt.tight_layout()
+                plt.show()
+                
+                print(f"🔥 GPU: {gpu_util}% | 💾 Memória: {mem_used}MB/{mem_total}MB")
+                
+        except Exception as e:
+            print(f"Erro no monitoramento: {e}")
+        
+        time.sleep(30)  # Atualizar a cada 30 segundos
+
+# Executar monitoramento
+monitor_gpu()
+            </div>
+        </div>
+
+        <!-- Passo 11: Salvar Modelo -->
+        <div class="step-card">
+            <div class="step-number">11</div>
+            <h2><i class="fas fa-save"></i> Salvar e Baixar Modelo</h2>
+            <p>Salve o modelo treinado:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+# Célula 6: Salvar modelo
+import os
+import shutil
+
+# Verificar arquivos gerados
+output_dir = '/kaggle/working/output'
+print("📁 Arquivos gerados:")
+for root, dirs, files in os.walk(output_dir):
+    for file in files:
+        file_path = os.path.join(root, file)
+        size = os.path.getsize(file_path) / (1024*1024)  # MB
+        print(f"  • {file} ({size:.1f} MB)")
+
+# Copiar modelo final para working directory
+model_files = [f for f in os.listdir(output_dir) if f.endswith(('.onnx', '.json'))]
+
+if model_files:
+    for model_file in model_files:
+        src = os.path.join(output_dir, model_file)
+        dst = os.path.join('/kaggle/working', model_file)
+        shutil.copy2(src, dst)
+        print(f"✅ Copiado: {model_file}")
+    
+    print("🎉 Modelo salvo com sucesso!")
+    print("📥 Arquivos disponíveis na aba 'Output' do notebook")
+else:
+    print("❌ Nenhum modelo encontrado. Verifique o treinamento.")
+            </div>
+
+            <div class="success-box">
+                <strong>📥 Download:</strong> Os arquivos aparecerão na aba "Output" do notebook para download
+            </div>
+        </div>
+
+        <!-- Passo 12: Testar Modelo -->
+        <div class="step-card">
+            <div class="step-number">12</div>
+            <h2><i class="fas fa-play-circle"></i> Testar Modelo</h2>
+            <p>Teste seu modelo treinado:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+# Célula 7: Testar modelo
+import subprocess
+import os
+from IPython.display import Audio
+
+# Encontrar modelo ONNX
+model_path = None
+for file in os.listdir('/kaggle/working'):
+    if file.endswith('.onnx'):
+        model_path = os.path.join('/kaggle/working', file)
+        break
+
+if model_path:
+    print(f"🎯 Testando modelo: {os.path.basename(model_path)}")
+    
+    # Texto de teste
+    test_text = "Olá! Este é um teste do meu modelo de voz personalizado treinado no Kaggle."
+    
+    # Gerar áudio
+    output_audio = '/kaggle/working/teste_voz.wav'
+    
+    cmd = f'echo "{test_text}" | /kaggle/working/piper/piper --model {model_path} --output_file {output_audio}'
+    
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    
+    if os.path.exists(output_audio):
+        print("✅ Áudio gerado com sucesso!")
+        print(f"📝 Texto: {test_text}")
+        
+        # Reproduzir áudio no notebook
+        display(Audio(output_audio))
+    else:
+        print("❌ Erro na geração do áudio:")
+        print(result.stderr)
+else:
+    print("❌ Modelo ONNX não encontrado!")
+            </div>
+        </div>
+
+        <!-- Dicas Avançadas -->
+        <div class="step-card" style="background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);">
+            <h2><i class="fas fa-rocket"></i> Dicas Avançadas para Kaggle</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <div>
+                    <h4>🎯 Otimizações P100:</h4>
+                    <ul>
+                        <li>Batch size até 32 (16GB VRAM)</li>
+                        <li>Mixed precision (FP16)</li>
+                        <li>Gradient accumulation</li>
+                        <li>Checkpoints frequentes</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4>📊 Versionamento:</h4>
+                    <ul>
+                        <li>Salve versões do notebook</li>
+                        <li>Commit datasets atualizados</li>
+                        <li>Documente experimentos</li>
+                        <li>Compartilhe com comunidade</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h4>🔄 Workflow Avançado:</h4>
+                <ol>
+                    <li><strong>Dataset Público:</strong> Compartilhe datasets limpos</li>
+                    <li><strong>Notebook Template:</strong> Crie template reutilizável</li>
+                    <li><strong>Ensemble Models:</strong> Combine múltiplos modelos</li>
+                    <li><strong>Auto-tuning:</strong> Use Optuna para hiperparâmetros</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Links Úteis -->
+        <div class="step-card" style="background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);">
+            <h2><i class="fas fa-link"></i> Links Úteis Kaggle</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
+                <a href="https://www.kaggle.com/code" target="_blank" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; display: block;">
+                    <i class="fas fa-chart-line"></i> Kaggle Notebooks
+                </a>
+                <a href="https://www.kaggle.com/datasets" target="_blank" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; display: block;">
+                    <i class="fas fa-database"></i> Kaggle Datasets
+                </a>
+                <a href="https://www.kaggle.com/discussions" target="_blank" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; display: block;">
+                    <i class="fas fa-comments"></i> Discussões
+                </a>
+                <a href="https://www.kaggle.com/learn" target="_blank" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; display: block;">
+                    <i class="fas fa-graduation-cap"></i> Kaggle Learn
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(button) {
+            const codeBlock = button.parentElement;
+            const code = codeBlock.textContent.replace('Copiar', '').trim();
+            
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copiado!';
+                button.style.background = '#51cf66';
+                
+                setTimeout(() => {
+                    button.textContent = 'Copiar';
+                    button.style.background = 'rgba(255,255,255,0.2)';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
