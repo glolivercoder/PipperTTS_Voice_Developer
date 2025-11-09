@@ -284,15 +284,16 @@ def download_trained_model():
 
 @app.route('/transcription_engines')
 def get_transcription_engines():
-    """Retorna engines de transcrição disponíveis"""
+    """Retorna os engines de transcrição disponíveis"""
     try:
-        import auto_transcription
-        engines = auto_transcription.get_transcription_engines()
+        from transcription_engines_simple import get_transcription_engines_ultra_simple
+        engines = get_transcription_engines_ultra_simple()
         return jsonify({
             'engines': engines,
             'default': 'whisper' if 'whisper' in engines else engines[0] if engines else None
         })
     except Exception as e:
+        logger.error(f"❌ Erro ao obter engines de transcrição: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/start_transcription', methods=['POST'])
@@ -315,7 +316,7 @@ def start_auto_transcription():
         
         # Iniciar transcrição em thread separada
         transcription_thread = threading.Thread(
-            target=run_auto_transcription,
+            target=run_auto_transcription_fixed,
             args=(audio_dir, output_csv, engine, language)
         )
         transcription_thread.start()
@@ -323,16 +324,18 @@ def start_auto_transcription():
         return jsonify({'success': True, 'message': 'Transcrição automática iniciada'})
         
     except Exception as e:
+        logger.error(f"❌ Erro ao iniciar transcrição: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/transcription_status')
 def get_transcription_status():
     """Retorna status da transcrição automática"""
     try:
-        import auto_transcription
-        status = auto_transcription.get_transcription_status()
+        import auto_transcription_fixed
+        status = auto_transcription_fixed.get_transcription_status()
         return jsonify(status)
     except Exception as e:
+        logger.error(f"❌ Erro ao obter status de transcrição: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/upload_text_file', methods=['POST'])
@@ -354,11 +357,11 @@ def upload_text_file():
         text_file.save(temp_text_path)
         
         # Gerar CSV
-        import auto_transcription
+        import auto_transcription_fixed
         audio_dir = os.path.join(model_dir, 'wav')
         output_csv = os.path.join(model_dir, 'metadata.csv')
         
-        success = auto_transcription.global_csv_generator.create_from_text_file(
+        success = auto_transcription_fixed.global_csv_generator.create_from_text_file(
             temp_text_path, audio_dir, output_csv
         )
         
@@ -704,6 +707,27 @@ def run_auto_transcription(audio_dir, output_csv, engine, language):
     except Exception as e:
         print(f"❌ Erro na transcrição: {e}")
 
+def run_auto_transcription_fixed(audio_dir, output_csv, engine, language):
+    """Executa transcrição automática em thread separada (versão robusta)"""
+    try:
+        import auto_transcription_fixed
+        
+        def transcription_callback(status):
+            # Callback para atualizar progresso (pode ser expandido)
+            print(f"📊 Progresso: {status['progress']:.1f}% - {status['current_file']}")
+        
+        success = auto_transcription_fixed.start_auto_transcription(
+            audio_dir, output_csv, engine, language, transcription_callback
+        )
+        
+        if success:
+            print(f"✅ Transcrição concluída: {output_csv}")
+        else:
+            print(f"❌ Falha na transcrição automática")
+            
+    except Exception as e:
+        print(f"❌ Erro na transcrição: {e}")
+
 @app.route('/upload-googlecolab')
 def upload_googlecolab():
     """Página de guia para upload manual no Google Colab"""
@@ -729,4 +753,5 @@ if __name__ == '__main__':
     print("Acesse: http://localhost:5000")
     print("Para parar: Ctrl+C")
     
-    app.run(debug=not args.no_debug, host='0.0.0.0', port=5000)
+    # Evita reinícios inesperados do reloader que podem resetar conexões em rotas sensíveis
+    app.run(debug=not args.no_debug, host='0.0.0.0', port=5000, use_reloader=False)
