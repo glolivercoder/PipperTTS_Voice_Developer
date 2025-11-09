@@ -1,6 +1,18 @@
 // Variáveis globais
 let trainingInterval = null;
 let currentTab = 'upload';
+const trainedModelsMap = new Map();
+let lastAutoFilledText = '';
+
+const SAMPLE_TEXTS = {
+    'pt-br': 'Olá! Este é um teste da minha voz clonada usando o Piper TTS. A qualidade do resultado depende da quantidade e qualidade dos dados de treinamento.',
+    'pt': 'Olá! Este é um teste da minha voz clonada usando o Piper TTS. A qualidade do resultado depende da quantidade e qualidade dos dados de treinamento.',
+    'en-us': 'Hello! This is a test of my cloned voice using Piper TTS. The quality of the result depends on the quantity and quality of the training data.',
+    'en': 'Hello! This is a test of my cloned voice using Piper TTS. The quality of the result depends on the quantity and quality of the training data.',
+    'es': '¡Hola! Esta es una prueba de mi voz clonada usando Piper TTS. La calidad del resultado depende de la cantidad y calidad de los datos de entrenamiento.',
+    'fr': 'Bonjour ! Ceci est un test de ma voix clonée avec Piper TTS. La qualité du résultat dépend de la quantité et de la qualité des données d\'entraînement.',
+    'de': 'Hallo! Dies ist ein Test meiner geklonten Stimme mit Piper TTS. Die Qualität des Ergebnisses hängt von der Menge und Qualität der Trainingsdaten ab.'
+};
 
 // Inicialização quando a página carrega
 document.addEventListener('DOMContentLoaded', function() {
@@ -21,18 +33,59 @@ function setupEventListeners() {
     if (uploadForm) {
         uploadForm.addEventListener('submit', handleUpload);
     }
-    
+
     // Form de treinamento
     const trainingForm = document.getElementById('trainingForm');
     if (trainingForm) {
         trainingForm.addEventListener('submit', handleTraining);
     }
-    
+
     // Form de teste
     const testForm = document.getElementById('testForm');
     if (testForm) {
         testForm.addEventListener('submit', handleTest);
     }
+
+    // Form de teste de modelo
+    const testModelSelect = document.getElementById('test_model');
+    if (testModelSelect) {
+        testModelSelect.addEventListener('change', handleTestModelChange);
+    }
+}
+
+function handleTestModelChange() {
+    const select = document.getElementById('test_model');
+    const textarea = document.getElementById('test_text');
+    if (!select || !textarea) {
+        return;
+    }
+
+    const selectedModel = select.value;
+    const modelMeta = trainedModelsMap.get(selectedModel) || {};
+    const languageKey = normalizeLanguageKey(modelMeta.language);
+    const sampleText = SAMPLE_TEXTS[languageKey] || SAMPLE_TEXTS['pt-br'];
+
+    textarea.value = sampleText;
+    lastAutoFilledText = sampleText;
+}
+
+function normalizeLanguageKey(language) {
+    if (!language) {
+        return 'pt-br';
+    }
+
+    const normalized = language.toLowerCase();
+
+    if (SAMPLE_TEXTS[normalized]) {
+        return normalized;
+    }
+
+    const normalizedWithoutRegion = normalized.split(/[-_]/)[0];
+    if (SAMPLE_TEXTS[normalizedWithoutRegion]) {
+        return normalizedWithoutRegion;
+    }
+
+    return 'pt-br';
 }
 
 // Gerenciamento de abas
@@ -271,7 +324,6 @@ async function loadModels() {
     }
 }
 
-// Carregar modelos para teste
 async function loadTrainedModels() {
     try {
         const response = await fetch('/models');
@@ -279,17 +331,33 @@ async function loadTrainedModels() {
         
         const select = document.getElementById('test_model');
         if (!select) return;
-        
+
+        const previousSelection = select.value;
+        trainedModelsMap.clear();
         select.innerHTML = '<option value="">Selecione um modelo...</option>';
-        
+
         models.forEach(model => {
             if (model.has_onnx && model.has_json) {
                 const option = document.createElement('option');
                 option.value = model.name;
                 option.textContent = model.name;
+                if (model.language) {
+                    option.dataset.language = model.language;
+                }
                 select.appendChild(option);
+                trainedModelsMap.set(model.name, {
+                    language: (model.language || '').toLowerCase()
+                });
             }
         });
+
+        if (previousSelection && trainedModelsMap.has(previousSelection)) {
+            select.value = previousSelection;
+            handleTestModelChange();
+        } else {
+            select.value = '';
+            handleTestModelChange();
+        }
         
     } catch (error) {
         console.error('Erro ao carregar modelos para teste:', error);
@@ -305,6 +373,7 @@ function testModel(modelName) {
     const select = document.getElementById('test_model');
     if (select) {
         select.value = modelName;
+        handleTestModelChange();
     }
 }
 

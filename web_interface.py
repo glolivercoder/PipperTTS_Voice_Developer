@@ -133,12 +133,36 @@ def list_models():
             if os.path.isdir(model_path):
                 onnx_file = os.path.join(model_path, f"{item}.onnx")
                 json_file = os.path.join(model_path, f"{item}.onnx.json")
+                language = None
+                if os.path.exists(json_file):
+                    try:
+                        with open(json_file, 'r', encoding='utf-8') as config_file:
+                            config_data = json.load(config_file)
+                        language = config_data.get('language')
+                        if isinstance(language, dict):
+                            language = (
+                                language.get('code')
+                                or language.get('family')
+                                or language.get('iso3')
+                            )
+                        if isinstance(language, list) and language:
+                            language = language[0]
+                        if not language and isinstance(config_data.get('espeak'), dict):
+                            language = config_data['espeak'].get('voice')
+                        if isinstance(language, str):
+                            language = language.strip().replace('_', '-').lower()
+                    except Exception as config_error:
+                        logger.warning(
+                            f"⚠️ Falha ao ler configuração do modelo {item}: {config_error}"
+                        )
+                        language = None
                 
                 models.append({
                     'name': item,
                     'has_onnx': os.path.exists(onnx_file),
                     'has_json': os.path.exists(json_file),
-                    'path': model_path
+                    'path': model_path,
+                    'language': language
                 })
     
     return jsonify(models)
@@ -436,60 +460,30 @@ def test_voice():
                     })
                 else:
                     logger.error(f"❌ CLI também falhou: {result.stderr}")
-                    
-            except Exception as cli_error:
-                logger.error(f"❌ Erro no CLI: {cli_error}")
-            
-            # Último fallback: criar áudio sintético simples
-            try:
-                logger.info("🔄 Usando áudio sintético de fallback")
-                import numpy as np
-                import soundfile as sf
-                
-                # Gerar áudio sintético simples
-                duration = len(text) * 0.1
-                sample_rate = 22050
-                t = np.linspace(0, duration, int(sample_rate * duration))
-                
-                # Onda senoidal simples
-                freq = 220  # A3
-                audio = 0.3 * np.sin(2 * np.pi * freq * t)
-                
-                # Salvar arquivo
-                sf.write(output_path, audio, sample_rate)
-                
-                return jsonify({
-                    'success': True,
-                    'audio_url': f'/static/audio/{output_file}',
-                    'message': 'Áudio sintético de fallback gerado',
-                    'warning': 'Usando áudio sintético - modelo não funcionou'
-                })
-                
-            except Exception as final_error:
-                return jsonify({
-                    'error': f'Erro na síntese: {str(inference_error)}. Fallback também falhou: {str(final_error)}'
-                }), 500
-    
+                    # Se ambos os métodos falharam, retorne um erro claro.
+                    return jsonify({
+                        'error': f'Falha na síntese de voz. Erro principal: {str(inference_error)}. Erro no CLI: {result.stderr}'
+                    }), 500
+
+            except Exception as cli_error: # Captura erro ao tentar rodar o CLI
+                logger.error(f"❌ Erro ao executar o CLI do Piper: {cli_error}")
+                return jsonify({'error': f'Erro na síntese de voz: {str(inference_error)}. O fallback via CLI também falhou: {str(cli_error)}'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 def run_training_pipeline(model_name, model_dir, language, quality, sample_rate, single_speaker):
+    """Executa o pipeline de treinamento em uma thread separada"""
     global training_status
     
-    training_status.update({
-        'is_training': True,
-        'current_step': 'Iniciando pré-processamento',
-        'progress': 0,
-        'log': [],
-        'model_name': model_name
-    })
-    
     try:
-        # Importar módulo de treinamento real
-        import piper_train_real
+        training_status.update({
+            'is_training': True,
+            'model_name': model_name,
+            'log': []
+        })
         
-        # Passo 1: Pré-processamento real
-        update_training_status('Executando pré-processamento dos dados', 10)
+        # Passo 1: Pré-processamento
+        update_training_status('Iniciando pré-processamento dos dados', 10)
         
         # Verificar se os arquivos necessários existem
         metadata_file = os.path.join(model_dir, 'metadata.csv')
