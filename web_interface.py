@@ -12,6 +12,11 @@ import time
 from pathlib import Path
 import shutil
 from werkzeug.utils import secure_filename
+import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
@@ -385,38 +390,81 @@ def test_voice():
         if not os.path.exists(config_path):
             return jsonify({'error': 'Configuração do modelo não encontrada'}), 400
         
-        # Gerar áudio de teste usando sistema de inferência real
+        # Gerar áudio de teste usando sistema de inferência melhorado
         output_file = f"test_{model_name}_{int(time.time())}.wav"
         output_path = os.path.join('static', 'audio', output_file)
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
         try:
-            # Usar sistema de inferência real
-            import piper_inference
+            # Usar sistema de inferência melhorado
+            import piper_inference_fixed
             
-            tts = piper_inference.PiperTTSInference(model_path, config_path)
+            tts = piper_inference_fixed.PiperTTSInference(model_path, config_path)
+            
+            # Testar se o modelo foi carregado corretamente
+            model_status = tts.test_model_loading()
+            if not model_status['ready']:
+                logger.warning(f"⚠️ Modelo {model_name} não carregou completamente: {model_status}")
+            
+            # Sintetizar áudio
             audio = tts.synthesize(text, output_path)
             
             return jsonify({
                 'success': True,
                 'audio_url': f'/static/audio/{output_file}',
-                'message': f'Áudio gerado com sucesso ({len(audio)} amostras)'
+                'message': f'Áudio gerado com sucesso ({len(audio)} amostras)',
+                'model_status': model_status
             })
             
         except Exception as inference_error:
-            # Fallback: tentar usar piper CLI se disponível
-            cmd = f'echo "{text}" | piper -m "{model_path}" --output_file "{output_path}"'
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            logger.error(f"❌ Erro na inferência: {inference_error}")
             
-            if result.returncode == 0:
+            # Fallback: tentar usar piper CLI se disponível
+            try:
+                cmd = f'echo "{text}" | piper -m "{model_path}" --output_file "{output_path}"'
+                result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+                
+                if result.returncode == 0 and os.path.exists(output_path):
+                    return jsonify({
+                        'success': True,
+                        'audio_url': f'/static/audio/{output_file}',
+                        'message': 'Áudio gerado usando Piper CLI',
+                        'warning': 'Usando fallback CLI'
+                    })
+                else:
+                    logger.error(f"❌ CLI também falhou: {result.stderr}")
+                    
+            except Exception as cli_error:
+                logger.error(f"❌ Erro no CLI: {cli_error}")
+            
+            # Último fallback: criar áudio sintético simples
+            try:
+                logger.info("🔄 Usando áudio sintético de fallback")
+                import numpy as np
+                import soundfile as sf
+                
+                # Gerar áudio sintético simples
+                duration = len(text) * 0.1
+                sample_rate = 22050
+                t = np.linspace(0, duration, int(sample_rate * duration))
+                
+                # Onda senoidal simples
+                freq = 220  # A3
+                audio = 0.3 * np.sin(2 * np.pi * freq * t)
+                
+                # Salvar arquivo
+                sf.write(output_path, audio, sample_rate)
+                
                 return jsonify({
                     'success': True,
                     'audio_url': f'/static/audio/{output_file}',
-                    'message': 'Áudio gerado usando Piper CLI'
+                    'message': 'Áudio sintético de fallback gerado',
+                    'warning': 'Usando áudio sintético - modelo não funcionou'
                 })
-            else:
+                
+            except Exception as final_error:
                 return jsonify({
-                    'error': f'Erro na síntese: {str(inference_error)}. CLI também falhou: {result.stderr}'
+                    'error': f'Erro na síntese: {str(inference_error)}. Fallback também falhou: {str(final_error)}'
                 }), 500
     
     except Exception as e:
