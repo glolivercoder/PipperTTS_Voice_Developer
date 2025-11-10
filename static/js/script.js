@@ -9,8 +9,17 @@ const SAMPLE_TEXTS = {
     'pt': 'Olá! Este é um teste da minha voz clonada usando o Piper TTS. A qualidade do resultado depende da quantidade e qualidade dos dados de treinamento.',
     'en-us': 'Hello! This is a test of my cloned voice using Piper TTS. The quality of the result depends on the quantity and quality of the training data.',
     'en': 'Hello! This is a test of my cloned voice using Piper TTS. The quality of the result depends on the quantity and quality of the training data.',
-    'es': '¡Hola! Esta es una prueba de mi voz clonada usando Piper TTS. La calidad del resultado depende de la cantidad y calidad de los datos de entrenamiento.',
+    'es': '¡Hola! Esta es una prueba de mi voz clonada usando Piper TTS. La calidad del resultado depende de la cantidad y la calidad de los datos de entrenamiento.',
+    'es-es': '¡Hola! Esta es una prueba de mi voz clonada usando Piper TTS. La calidad del resultado depende de la cantidad y la calidad de los datos de entrenamiento.',
+    'es-mx': '¡Hola! Esta es una prueba de mi voz clonada usando Piper TTS. La calidad del resultado depende de la cantidad y la calidad de los datos de entrenamiento.',
     'fr': 'Bonjour ! Ceci est un test de ma voix clonée avec Piper TTS. La qualité du résultat dépend de la quantité et de la qualité des données d\'entraînement.',
+    'fr-fr': 'Bonjour ! Ceci est un test de ma voix clonée avec Piper TTS. La qualité du résultat dépend de la quantité et de la qualité des données d\'entraînement.',
+    'it': 'Ciao! Questo è un test della mia voce clonata con Piper TTS. La qualità del risultato dipende dalla quantità e dalla qualità dei dati di addestramento.',
+    'it-it': 'Ciao! Questo è un test della mia voce clonata con Piper TTS. La qualità del risultato dipende dalla quantità e dalla qualità dei dati di addestramento.',
+    'ru': 'Привет! Это тест моего клонированного голоса с помощью Piper TTS. Качество результата зависит от количества и качества обучающих данных.',
+    'ru-ru': 'Привет! Это тест моего клонированного голоса с помощью Piper TTS. Качество результата зависит от количества и качества обучающих данных.',
+    'sv': 'Hej! Det här är ett test av min klonade röst med Piper TTS. Resultatets kvalitet beror på mängden och kvaliteten på träningsdatan.',
+    'sv-se': 'Hej! Det här är ett test av min klonade röst med Piper TTS. Resultatets kvalitet beror på mängden och kvaliteten på träningsdatan.',
     'de': 'Hallo! Dies ist ein Test meiner geklonten Stimme mit Piper TTS. Die Qualität des Ergebnisses hängt von der Menge und Qualität der Trainingsdaten ab.'
 };
 
